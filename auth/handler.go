@@ -44,7 +44,7 @@ func LoginHandler(c *gin.Context) {
 
 	if err1 != nil || err2 != nil {
 		err = errors.Join(err1, err2)
-		log.Println("an error accrued while generate tokens", err)
+		log.Println("an error occurred while generate tokens", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "an error accrued while generate tokens"})
 		return
 	}

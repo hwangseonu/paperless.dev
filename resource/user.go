@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
+	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/database"
 	"github.com/hwangseonu/paperless.dev/schema"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -25,8 +26,13 @@ func NewUser() *User {
 	return user
 }
 
-func (resource *User) RequestBody(_ string) interface{} {
-	return new(schema.User)
+func (resource *User) RequestBody(method string) interface{} {
+	switch method {
+	case http.MethodGet, http.MethodDelete:
+		return nil
+	default:
+		return new(schema.User)
+	}
 }
 
 func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, error) {
@@ -62,7 +68,26 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	}, http.StatusCreated, nil
 }
 
-func (resource *User) Read(_ string, _ *gin.Context) (gin.H, int, error) {
+func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
+	if id == "me" {
+		cred, ok := c.Get("credential")
+		if !ok {
+			return nil, http.StatusUnauthorized, errors.New("unauthorized")
+		}
+
+		credential := cred.(auth.Credential)
+		user, err := resource.repository.FindByUsername(credential.Username)
+
+		if err != nil {
+			return nil, http.StatusNotFound, errors.New("user not found")
+		}
+
+		return gin.H{
+			"username": user.Username,
+			"email":    user.Email,
+		}, http.StatusOK, nil
+	}
+
 	return nil, http.StatusOK, nil
 }
 

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -45,4 +46,24 @@ func GenerateToken(username string, subject string) (string, error) {
 	tokenString, err := token.SignedString(secret)
 
 	return tokenString, err
+}
+
+func ParseToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(paperless.GetConfig().JwtSecret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return nil, err
 }
