@@ -4,7 +4,8 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.10.1
-	github.com/hwangseonu/gin-restful v0.0.0-20250920110713-f153740ec3cc
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/hwangseonu/gin-restful v0.0.0-20250920115753-c28a85cab60a
 	go.mongodb.org/mongo-driver/v2 v2.3.0
 	golang.org/x/crypto v0.42.0
 )

@@ -26,6 +26,16 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
+func (repository *UserRepository) FindByUsername(username string) (*User, error) {
+	var user User
+	err := repository.collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (repository *UserRepository) FindByUsernameOrEmail(username, email string) (*User, error) {
 	filter := bson.M{
 		"$or": []bson.M{
