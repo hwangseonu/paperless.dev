@@ -8,10 +8,46 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AccessTokenMiddleware(protected map[string][]string) gin.HandlerFunc {
+type Protected struct {
+	protected map[string][]string
+}
+
+func NewProtected() *Protected {
+	return &Protected{protected: make(map[string][]string)}
+}
+
+func (p *Protected) isProtected(method, path string) bool {
+	paths := p.protected[method]
+	return slices.Contains(paths, path)
+}
+
+func (p *Protected) Register(method, path string) {
+	list, ok := p.protected[method]
+	if !ok {
+		p.protected[method] = []string{path}
+	}
+	list = append(list, path)
+	p.protected[method] = list
+}
+
+func (p *Protected) RegisterAny(path string) {
+	methods := []string{
+		http.MethodGet,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodPatch,
+		http.MethodDelete,
+	}
+
+	for _, method := range methods {
+		p.Register(method, path)
+	}
+}
+
+func (p *Protected) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		p := protected[c.Request.Method]
-		if !slices.Contains(p, c.FullPath()) {
+		if !p.isProtected(c.Request.Method, c.FullPath()) {
+			c.Next()
 			return
 		}
 
@@ -35,6 +71,12 @@ func AccessTokenMiddleware(protected map[string][]string) gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "an error occurred while parsing token"})
+			c.Abort()
+			return
+		}
+
+		if claims.Subject != "access" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "an error occurred while validating token"})
 			c.Abort()
 			return
 		}

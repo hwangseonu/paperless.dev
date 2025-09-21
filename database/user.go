@@ -45,7 +45,7 @@ func (repository *UserRepository) FindByUsernameOrEmail(username, email string) 
 	}
 
 	var user User
-	err := repository.collection.FindOne(context.TODO(), filter).Decode(&user)
+	err := repository.collection.FindOne(context.Background(), filter).Decode(&user)
 
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (repository *UserRepository) FindByUsernameOrEmail(username, email string) 
 }
 
 func (repository *UserRepository) InsertOne(user User) (*User, error) {
-	result, err := repository.collection.InsertOne(context.TODO(), user)
+	result, err := repository.collection.InsertOne(context.Background(), user)
 	if err != nil {
 		return nil, err
 	}

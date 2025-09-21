@@ -42,6 +42,8 @@ github.com/hwangseonu/gin-restful v0.0.0-20250920115753-c28a85cab60a h1:qP1eN9Tu
 github.com/hwangseonu/gin-restful v0.0.0-20250920115753-c28a85cab60a/go.mod h1:uP5pjlwmo9FFTQmqJ6jqcr5UYQG4kvkkYLKPxel43qc=
 github.com/hwangseonu/gin-restful v0.0.0-20250920222209-839802b9116c h1:HdJN9fhdrKanfWgBDcw4CS5vedscE3c3dXcLUauKHSk=
 github.com/hwangseonu/gin-restful v0.0.0-20250920222209-839802b9116c/go.mod h1:uP5pjlwmo9FFTQmqJ6jqcr5UYQG4kvkkYLKPxel43qc=
+github.com/hwangseonu/gin-restful v0.0.0-20250921163448-e63e190bd786 h1:TPgZ/XkuY/7BvYQLlpaeKxFtAdajFuILIJ/z5EqvHGg=
+github.com/hwangseonu/gin-restful v0.0.0-20250921163448-e63e190bd786/go.mod h1:uP5pjlwmo9FFTQmqJ6jqcr5UYQG4kvkkYLKPxel43qc=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/klauspost/compress v1.16.7 h1:2mk3MPGNzKyxErAw8YaohYh69+pa4sIQSC0fPGCFR9I=

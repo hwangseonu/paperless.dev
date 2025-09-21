@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
@@ -13,22 +12,18 @@ import (
 func main() {
 	engine := gin.Default()
 
-	protected := map[string][]string{
-		http.MethodGet:    {"/api/v1/users/:id"},
-		http.MethodPost:   {"/api/v1/users/:id"},
-		http.MethodPut:    {"/api/v1/users/:id"},
-		http.MethodPatch:  {"/api/v1/users/:id"},
-		http.MethodDelete: {"/api/v1/users/:id"},
-	}
+	protected := auth.NewProtected()
+	protected.RegisterAny("/api/v1/users/:id")
 
-	engine.Use(auth.AccessTokenMiddleware(protected))
+	engine.Use(protected.Middleware())
 
 	api := restful.NewAPI("/api/v1")
 	{
-
 		user := resource.NewUser()
+		resume := resource.NewResume()
 		api.RegisterResource("/users", user)
-		api.RegisterHandlers(engine)
+		api.RegisterResource("/resume", resume)
+		api.RegisterHandlers(&engine.RouterGroup)
 	}
 
 	authGroup := engine.Group("/api/v1/auth")
