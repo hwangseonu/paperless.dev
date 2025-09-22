@@ -1,6 +1,6 @@
 package auth
 
 type Credential struct {
-	Username string
-	Roles    []string
+	UserID string
+	Roles  []string
 }

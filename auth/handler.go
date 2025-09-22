@@ -39,8 +39,8 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	access, err1 := GenerateToken(user.Username, "access")
-	refresh, err2 := GenerateToken(user.Username, "refresh")
+	access, err1 := GenerateToken(user.ID.Hex(), "access")
+	refresh, err2 := GenerateToken(user.ID.Hex(), "refresh")
 
 	if err1 != nil || err2 != nil {
 		err = errors.Join(err1, err2)

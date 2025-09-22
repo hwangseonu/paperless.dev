@@ -2,6 +2,8 @@ package database
 
 import (
 	"context"
+	"errors"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -9,11 +11,19 @@ import (
 )
 
 type User struct {
-	ID        bson.ObjectID `bson:"_id,omitempty"`
-	Username  string        `bson:"username"`
-	Email     string        `bson:"email"`
-	Password  string        `bson:"password"`
-	CreatedAt time.Time     `bson:"createdAt"`
+	ID              bson.ObjectID `bson:"_id,omitempty"`
+	Username        string        `bson:"username"`
+	Email           string        `bson:"email"`
+	Password        string        `bson:"password,omitempty"`
+	Provider        string        `bson:"provider"`
+	IsEmailVerified bool          `bson:"isEmailVerified,omitempty"`
+	Name            string        `bson:"name,omitempty"`
+	Bio             string        `bson:"bio,omitempty"`
+	ProfileImageURL string        `bson:"profileImageURL,omitempty"`
+
+	CreatedAt time.Time `bson:"createdAt"`
+	UpdatedAt time.Time `bson:"updatedAt"`
+	LastLogin time.Time `bson:"lastLogin,omitempty"`
 }
 
 type UserRepository struct {
@@ -26,9 +36,22 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-func (repository *UserRepository) FindByUsername(username string) (*User, error) {
+func (repository *UserRepository) FindByID(id bson.ObjectID) (*User, error) {
 	var user User
-	err := repository.collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&user)
+	err := repository.collection.FindOne(context.Background(), bson.M{"_id": id}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (repository *UserRepository) FindByUsername(username string) (*User, error) {
+	filter := bson.M{"username": username}
+
+	var user User
+	err := repository.collection.FindOne(context.Background(), filter).Decode(&user)
+
 	if err != nil {
 		return nil, err
 	}
@@ -61,4 +84,17 @@ func (repository *UserRepository) InsertOne(user User) (*User, error) {
 	}
 	user.ID = result.InsertedID.(bson.ObjectID)
 	return &user, nil
+}
+
+func (repository *UserRepository) UpdateOne(id bson.ObjectID, updateFields bson.M) (*mongo.UpdateResult, error) {
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": updateFields}
+
+	result, err := repository.collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Println(err)
+		return result, errors.New("database error")
+	}
+
+	return result, nil
 }

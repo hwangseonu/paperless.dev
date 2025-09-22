@@ -21,27 +21,26 @@ func (p *Protected) isProtected(method, path string) bool {
 	return slices.Contains(paths, path)
 }
 
-func (p *Protected) Register(method, path string) {
-	list, ok := p.protected[method]
-	if !ok {
-		p.protected[method] = []string{path}
+func (p *Protected) Register(path string, methods ...string) {
+	for _, method := range methods {
+		list, ok := p.protected[method]
+		if !ok {
+			p.protected[method] = []string{path}
+		}
+		list = append(list, path)
+		p.protected[method] = list
 	}
-	list = append(list, path)
-	p.protected[method] = list
 }
 
 func (p *Protected) RegisterAny(path string) {
-	methods := []string{
+	p.Register(
+		path,
 		http.MethodGet,
 		http.MethodPost,
 		http.MethodPut,
 		http.MethodPatch,
 		http.MethodDelete,
-	}
-
-	for _, method := range methods {
-		p.Register(method, path)
-	}
+	)
 }
 
 func (p *Protected) Middleware() gin.HandlerFunc {
@@ -82,8 +81,8 @@ func (p *Protected) Middleware() gin.HandlerFunc {
 		}
 
 		c.Set("credential", Credential{
-			Username: claims.Username,
-			Roles:    claims.Roles,
+			UserID: claims.UserID,
+			Roles:  claims.Roles,
 		})
 		c.Next()
 	}

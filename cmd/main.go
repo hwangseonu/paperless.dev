@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
@@ -14,6 +15,8 @@ func main() {
 
 	protected := auth.NewProtected()
 	protected.RegisterAny("/api/v1/users/:id")
+	protected.Register("/api/v1/resume", http.MethodPost)
+	protected.Register("/api/v1/resume/:id", http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
 
 	engine.Use(protected.Middleware())
 
