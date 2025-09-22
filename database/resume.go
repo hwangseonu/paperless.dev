@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -61,4 +62,13 @@ func NewResumeRepository() *ResumeRepository {
 	return &ResumeRepository{
 		collection: mongoDatabase.Collection("resumes"),
 	}
+}
+
+func (r *ResumeRepository) InsertOne(doc Resume) (*Resume, error) {
+	result, err := r.collection.InsertOne(context.Background(), doc)
+	if err != nil {
+		return nil, err
+	}
+	doc.ID = result.InsertedID.(bson.ObjectID)
+	return &doc, nil
 }
