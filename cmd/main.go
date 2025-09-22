@@ -15,8 +15,8 @@ func main() {
 
 	protector := auth.NewProtector()
 	protector.RegisterAny("/api/v1/users/:id")
-	protector.Register("/api/v1/resume", http.MethodPost)
-	protector.Register("/api/v1/resume/:id", http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
+	protector.Register("/api/v1/resumes", http.MethodPost)
+	protector.Register("/api/v1/resumes/:id", http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
 
 	engine.Use(protector.Middleware())
 
@@ -25,7 +25,7 @@ func main() {
 		user := resource.NewUser()
 		resume := resource.NewResume()
 		api.RegisterResource("/users", user)
-		api.RegisterResource("/resume", resume)
+		api.RegisterResource("/resumes", resume)
 		api.RegisterHandlers(&engine.RouterGroup)
 	}
 
