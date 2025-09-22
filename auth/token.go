@@ -9,15 +9,15 @@ import (
 )
 
 type Claims struct {
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
+	UserID string   `json:"userid"`
+	Roles  []string `json:"roles"`
 	jwt.StandardClaims
 }
 
 const accessTokenDuration = time.Hour * 24
 const refreshTokenDuration = time.Hour * 24 * 30
 
-func GenerateToken(username string, subject string) (string, error) {
+func GenerateToken(userID string, subject string) (string, error) {
 	secret := []byte(paperless.GetConfig().JwtSecret)
 
 	now := time.Now()
@@ -29,8 +29,8 @@ func GenerateToken(username string, subject string) (string, error) {
 	}
 
 	claims := Claims{
-		Username: username,
-		Roles:    []string{"user"},
+		UserID: userID,
+		Roles:  []string{"user"},
 		StandardClaims: jwt.StandardClaims{
 			Audience:  "paperless.dev",
 			ExpiresAt: duration.Unix(),
