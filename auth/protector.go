@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Protected struct {
+type Protector struct {
 	protected map[string][]string
 }
 
-func NewProtected() *Protected {
-	return &Protected{protected: make(map[string][]string)}
+func NewProtector() *Protector {
+	return &Protector{protected: make(map[string][]string)}
 }
 
-func (p *Protected) isProtected(method, path string) bool {
+func (p *Protector) isProtected(method, path string) bool {
 	paths := p.protected[method]
 	return slices.Contains(paths, path)
 }
 
-func (p *Protected) Register(path string, methods ...string) {
+func (p *Protector) Register(path string, methods ...string) {
 	for _, method := range methods {
 		list, ok := p.protected[method]
 		if !ok {
@@ -32,7 +32,7 @@ func (p *Protected) Register(path string, methods ...string) {
 	}
 }
 
-func (p *Protected) RegisterAny(path string) {
+func (p *Protector) RegisterAny(path string) {
 	p.Register(
 		path,
 		http.MethodGet,
@@ -43,7 +43,7 @@ func (p *Protected) RegisterAny(path string) {
 	)
 }
 
-func (p *Protected) Middleware() gin.HandlerFunc {
+func (p *Protector) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !p.isProtected(c.Request.Method, c.FullPath()) {
 			c.Next()

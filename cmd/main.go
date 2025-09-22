@@ -13,12 +13,12 @@ import (
 func main() {
 	engine := gin.Default()
 
-	protected := auth.NewProtected()
-	protected.RegisterAny("/api/v1/users/:id")
-	protected.Register("/api/v1/resume", http.MethodPost)
-	protected.Register("/api/v1/resume/:id", http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
+	protector := auth.NewProtector()
+	protector.RegisterAny("/api/v1/users/:id")
+	protector.Register("/api/v1/resume", http.MethodPost)
+	protector.Register("/api/v1/resume/:id", http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
 
-	engine.Use(protected.Middleware())
+	engine.Use(protector.Middleware())
 
 	api := restful.NewAPI("/api/v1")
 	{
