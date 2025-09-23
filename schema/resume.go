@@ -110,3 +110,42 @@ func (s *ResumeResponseSchema) FromModel(resume database.Resume) *ResumeResponse
 
 	return s
 }
+
+type ExperienceUpdateSchema struct {
+	Company     *string    `json:"company,omitempty"`
+	Title       *string    `json:"title,omitempty"`
+	Location    *string    `json:"location,omitempty"`
+	StartDate   *time.Time `json:"startDate,omitempty"`
+	EndDate     *time.Time `json:"endDate,omitempty"`
+	Description *string    `json:"description,omitempty"`
+}
+
+type EducationUpdateSchema struct {
+	School     *string    `json:"school,omitempty"`
+	Degree     *string    `json:"degree,omitempty"`
+	Major      *string    `json:"major,omitempty"`
+	StartDate  *time.Time `json:"startDate,omitempty"`
+	EndDate    *time.Time `json:"endDate,omitempty"`
+	GPA        *string    `json:"gpa,omitempty"`
+	Activities *string    `json:"activities,omitempty"`
+}
+
+type ProjectUpdateSchema struct {
+	Title       *string    `json:"title,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	URL         *string    `json:"url,omitempty"`
+	StartDate   *time.Time `json:"startDate,omitempty"`
+	EndDate     *time.Time `json:"endDate,omitempty"`
+	Skills      *[]string  `json:"skills,omitempty"`
+}
+
+type ResumeUpdateSchema struct {
+	Title       *string                   `json:"title,omitempty"`
+	Bio         *string                   `json:"bio,omitempty"`
+	Public      *bool                     `json:"public,omitempty"`
+	Template    *string                   `json:"template,omitempty"`
+	Skills      *[]string                 `json:"skills,omitempty"`
+	Experiences *[]ExperienceUpdateSchema `json:"experiences,omitempty"`
+	Educations  *[]EducationUpdateSchema  `json:"educations,omitempty"`
+	Projects    *[]ProjectUpdateSchema    `json:"projects,omitempty"`
+}

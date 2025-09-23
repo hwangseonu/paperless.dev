@@ -2,8 +2,10 @@ package database
 
 import (
 	"context"
+	"log"
 	"time"
 
+	"github.com/hwangseonu/paperless.dev"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -80,4 +82,17 @@ func (r *ResumeRepository) InsertOne(doc Resume) (*Resume, error) {
 	}
 	doc.ID = result.InsertedID.(bson.ObjectID)
 	return &doc, nil
+}
+
+func (r *ResumeRepository) UpdateOne(resumeID bson.ObjectID, updateFields bson.M) (*mongo.UpdateResult, error) {
+	filter := bson.M{"_id": resumeID}
+	update := bson.M{"$set": updateFields}
+
+	result, err := r.collection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Println(err)
+		return result, paperless.ErrDatabase
+	}
+
+	return result, nil
 }

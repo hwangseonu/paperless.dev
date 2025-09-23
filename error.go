@@ -10,4 +10,5 @@ var (
 	ErrAccessDenied   = errors.New("access denied")
 	ErrResumeNotFound = errors.New("resume not found")
 	ErrInvalidID      = errors.New("invalid id")
+	ErrNoChanges      = errors.New("no fields to update")
 )

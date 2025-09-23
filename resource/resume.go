@@ -3,6 +3,7 @@ package resource
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hwangseonu/paperless.dev"
@@ -29,6 +30,8 @@ func (resource *Resume) RequestBody(method string) any {
 	switch method {
 	case http.MethodPost:
 		return new(schema.ResumeCreateSchema)
+	case http.MethodPatch:
+		return new(schema.ResumeUpdateSchema)
 	default:
 		return nil
 	}
@@ -47,11 +50,17 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 	resume := body.(*schema.ResumeCreateSchema)
 
 	doc, err := resource.repository.InsertOne(database.Resume{
-		UserID:   userID,
-		Title:    resume.Title,
-		Bio:      resume.Bio,
-		Public:   resume.Public,
-		Template: resume.Template,
+		UserID:      userID,
+		Title:       resume.Title,
+		Bio:         resume.Bio,
+		Public:      resume.Public,
+		Template:    resume.Template,
+		Skills:      make([]string, 0),
+		Experiences: make([]database.Experience, 0),
+		Educations:  make([]database.Education, 0),
+		Projects:    make([]database.Project, 0),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	})
 	if err != nil {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
@@ -93,17 +102,91 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	return nil, http.StatusForbidden, paperless.ErrAccessDenied
 }
 
-func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
+func (resource *Resume) ReadAll(_ *gin.Context) (gin.H, int, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
 func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin.H, int, error) {
-	//TODO implement me
-	panic("implement me")
+	if c.Request.Method == http.MethodPut {
+		return nil, http.StatusNotFound, nil
+	}
+
+	credentialContext, ok := c.Get("credential")
+	if !ok {
+		return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
+	}
+	credential := credentialContext.(auth.Credential)
+	ownerID, _ := bson.ObjectIDFromHex(credential.UserID)
+
+	resumeID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, http.StatusNotFound, paperless.ErrInvalidID
+	}
+
+	resumeDoc, err := resource.repository.FindByID(resumeID)
+
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
+		}
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+	}
+
+	if resumeDoc.UserID != ownerID {
+		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+	}
+
+	updateBody := body.(*schema.ResumeUpdateSchema)
+
+	updateFields := bson.M{}
+	if updateBody.Title != nil {
+		updateFields["title"] = *updateBody.Title
+	}
+	if updateBody.Bio != nil {
+		updateFields["bio"] = *updateBody.Bio
+	}
+	if updateBody.Public != nil {
+		updateFields["public"] = *updateBody.Public
+	}
+	if updateBody.Template != nil {
+		updateFields["template"] = *updateBody.Template
+	}
+	if updateBody.Skills != nil {
+		updateFields["skills"] = *updateBody.Skills
+	}
+	if updateBody.Experiences != nil {
+		updateFields["experiences"] = *updateBody.Experiences
+	}
+	if updateBody.Educations != nil {
+		updateFields["educations"] = *updateBody.Educations
+	}
+	if updateBody.Projects != nil {
+		updateFields["projects"] = *updateBody.Projects
+	}
+
+	if len(updateFields) == 0 {
+		return nil, http.StatusBadRequest, paperless.ErrNoChanges
+	}
+
+	updateFields["updatedAt"] = time.Now()
+
+	result, err := resource.repository.UpdateOne(resumeID, updateFields)
+	if err != nil {
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+	}
+
+	if result.MatchedCount == 0 {
+		return nil, http.StatusNotFound, paperless.ErrResumeNotFound
+	}
+	if result.ModifiedCount == 0 {
+		return nil, http.StatusNotModified, paperless.ErrNoChanges
+	}
+
+	return nil, http.StatusNoContent, nil
 }
 
-func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
+func (resource *Resume) Delete(_ string, _ *gin.Context) (gin.H, int, error) {
 	//TODO implement me
 	panic("implement me")
 }
