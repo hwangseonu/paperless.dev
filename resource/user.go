@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
+	"github.com/hwangseonu/paperless.dev"
 	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/database"
 	"github.com/hwangseonu/paperless.dev/schema"
@@ -42,7 +43,7 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	user := body.(*schema.UserCreateSchema)
 
 	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, http.StatusInternalServerError, errors.New("database error")
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	} else if doc != nil {
 		return nil, http.StatusConflict, errors.New("user already exists")
 	}
@@ -61,7 +62,7 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 
 	if err != nil {
 		log.Println(err)
-		return nil, http.StatusInternalServerError, errors.New("database error")
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
 	return gin.H{
@@ -75,7 +76,7 @@ func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		cred, ok := c.Get("credential")
 		if !ok {
-			return nil, http.StatusUnauthorized, errors.New("unauthorized")
+			return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
 		}
 
 		credential := cred.(auth.Credential)
@@ -83,13 +84,13 @@ func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 		userID, err := bson.ObjectIDFromHex(credential.UserID)
 
 		if err != nil {
-			return nil, http.StatusUnauthorized, errors.New("user id is invalid")
+			return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
 		}
 
 		user, err := resource.repository.FindByID(userID)
 
 		if err != nil {
-			return nil, http.StatusNotFound, errors.New("user not found")
+			return nil, http.StatusNotFound, paperless.ErrUserNotFound
 		}
 
 		res := new(schema.UserResponseSchema).FromModel(*user)
@@ -109,7 +110,7 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	}
 	credentialContext, ok := c.Get("credential")
 	if !ok {
-		return nil, http.StatusUnauthorized, errors.New("unauthorized")
+		return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
 	}
 	credential := credentialContext.(auth.Credential)
 
@@ -118,12 +119,12 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	if id == "me" {
 		objID, err := bson.ObjectIDFromHex(credential.UserID)
 		if err != nil {
-			return nil, http.StatusUnauthorized, errors.New("invalid user ID in token")
+			return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
 		}
 		targetUserID = objID
 	} else {
 		// TODO: Admin permission is required to update other users.
-		return nil, http.StatusForbidden, nil
+		return nil, http.StatusForbidden, paperless.ErrAccessDenied
 	}
 
 	updateBody := body.(*schema.UserUpdateSchema)
@@ -152,11 +153,11 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 
 	if err != nil {
 		log.Println(err)
-		return nil, http.StatusInternalServerError, errors.New("database error")
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
 	if result.MatchedCount == 0 {
-		return nil, http.StatusNotFound, errors.New("user not found")
+		return nil, http.StatusNotFound, paperless.ErrUserNotFound
 	}
 	if result.ModifiedCount == 0 {
 		return nil, http.StatusNotModified, errors.New("no changes made")

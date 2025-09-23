@@ -2,10 +2,10 @@ package database
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
+	"github.com/hwangseonu/paperless.dev"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -93,7 +93,7 @@ func (repository *UserRepository) UpdateOne(id bson.ObjectID, updateFields bson.
 	result, err := repository.collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Println(err)
-		return result, errors.New("database error")
+		return result, paperless.ErrDatabase
 	}
 
 	return result, nil

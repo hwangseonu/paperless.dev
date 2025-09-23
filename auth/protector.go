@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hwangseonu/paperless.dev"
 )
 
 type Protector struct {
@@ -23,12 +25,7 @@ func (p *Protector) isProtected(method, path string) bool {
 
 func (p *Protector) Register(path string, methods ...string) {
 	for _, method := range methods {
-		list, ok := p.protected[method]
-		if !ok {
-			p.protected[method] = []string{path}
-		}
-		list = append(list, path)
-		p.protected[method] = list
+		p.protected[method] = append(p.protected[method], path)
 	}
 }
 
@@ -43,6 +40,38 @@ func (p *Protector) RegisterAny(path string) {
 	)
 }
 
+func Authorize(c *gin.Context) (int, error) {
+	authHeader := c.Request.Header.Get("Authorization")
+
+	if authHeader == "" {
+		return http.StatusUnauthorized, errors.New("no authorization header")
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if !(len(parts) == 2 && parts[0] == "Bearer") {
+		return http.StatusUnauthorized, errors.New("authorization header format must be 'Bearer <token>'")
+	}
+
+	token := parts[1]
+	claims, err := ParseToken(token)
+
+	if err != nil {
+		return http.StatusUnauthorized, paperless.ErrInvalidToken
+	}
+
+	if claims.Subject != "access" {
+		return http.StatusUnauthorized, paperless.ErrInvalidToken
+	}
+
+	c.Set("credential", Credential{
+		UserID: claims.UserID,
+		Roles:  claims.Roles,
+	})
+
+	return http.StatusOK, nil
+
+}
+
 func (p *Protector) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !p.isProtected(c.Request.Method, c.FullPath()) {
@@ -50,40 +79,13 @@ func (p *Protector) Middleware() gin.HandlerFunc {
 			return
 		}
 
-		authHeader := c.Request.Header.Get("Authorization")
-
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is empty"})
-			c.Abort()
-			return
-		}
-
-		parts := strings.SplitN(authHeader, " ", 2)
-		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header format must be 'Bearer <token>'"})
-			c.Abort()
-			return
-		}
-
-		token := parts[1]
-		claims, err := ParseToken(token)
-
+		status, err := Authorize(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "an error occurred while parsing token"})
+			c.JSON(status, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 
-		if claims.Subject != "access" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "an error occurred while validating token"})
-			c.Abort()
-			return
-		}
-
-		c.Set("credential", Credential{
-			UserID: claims.UserID,
-			Roles:  claims.Roles,
-		})
 		c.Next()
 	}
 }

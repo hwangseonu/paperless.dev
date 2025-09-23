@@ -28,7 +28,7 @@ func LoginHandler(c *gin.Context) {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user does not exist"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": errors.New("database error")})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "database error"})
 		}
 		return
 	}

@@ -64,6 +64,15 @@ func NewResumeRepository() *ResumeRepository {
 	}
 }
 
+func (r *ResumeRepository) FindByID(id bson.ObjectID) (*Resume, error) {
+	doc := new(Resume)
+	err := r.collection.FindOne(context.Background(), bson.M{"_id": id}).Decode(doc)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
 func (r *ResumeRepository) InsertOne(doc Resume) (*Resume, error) {
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
