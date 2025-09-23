@@ -63,7 +63,7 @@ func Authorize(c *gin.Context) (int, error) {
 		return http.StatusUnauthorized, paperless.ErrInvalidToken
 	}
 
-	c.Set("credential", Credential{
+	c.Set("credential", UserCredentials{
 		UserID: claims.UserID,
 		Roles:  claims.Roles,
 	})

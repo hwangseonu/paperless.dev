@@ -40,7 +40,7 @@ func (resource *Resume) RequestBody(method string) any {
 func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, error) {
 	credential := c.MustGet("credential")
 
-	userCred := credential.(auth.Credential)
+	userCred := credential.(auth.UserCredentials)
 	userID, err := bson.ObjectIDFromHex(userCred.UserID)
 
 	if err != nil {
@@ -50,17 +50,13 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 	resume := body.(*schema.ResumeCreateSchema)
 
 	doc, err := resource.repository.InsertOne(database.Resume{
-		UserID:      userID,
-		Title:       resume.Title,
-		Bio:         resume.Bio,
-		Public:      resume.Public,
-		Template:    resume.Template,
-		Skills:      make([]string, 0),
-		Experiences: make([]database.Experience, 0),
-		Educations:  make([]database.Education, 0),
-		Projects:    make([]database.Project, 0),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		UserID:    userID,
+		Title:     resume.Title,
+		Bio:       resume.Bio,
+		Public:    resume.Public,
+		Template:  resume.Template,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	})
 	if err != nil {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
@@ -71,14 +67,11 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 }
 
 func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
-	status, err := auth.Authorize(c)
-	authorized := err == nil && status == http.StatusOK
+	credentials := auth.GetUserCredentials(c)
+	userID := ""
 
-	var userID string
-	if authorized {
-		credential := c.MustGet("credential")
-		userCred := credential.(auth.Credential)
-		userID = userCred.UserID
+	if credentials != nil {
+		userID = credentials.UserID
 	}
 
 	docID, err := bson.ObjectIDFromHex(id)
@@ -116,7 +109,7 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 	if !ok {
 		return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
 	}
-	credential := credentialContext.(auth.Credential)
+	credential := credentialContext.(auth.UserCredentials)
 	ownerID, _ := bson.ObjectIDFromHex(credential.UserID)
 
 	resumeID, err := bson.ObjectIDFromHex(id)

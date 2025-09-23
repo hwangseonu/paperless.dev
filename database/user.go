@@ -98,3 +98,12 @@ func (repository *UserRepository) UpdateOne(id bson.ObjectID, updateFields bson.
 
 	return result, nil
 }
+
+func (repository *UserRepository) DeleteByID(id bson.ObjectID) (*mongo.DeleteResult, error) {
+	filter := bson.M{"_id": id}
+	result, err := repository.collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

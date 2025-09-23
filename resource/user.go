@@ -74,14 +74,8 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 
 func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
-		cred, ok := c.Get("credential")
-		if !ok {
-			return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
-		}
-
-		credential := cred.(auth.Credential)
-
-		userID, err := bson.ObjectIDFromHex(credential.UserID)
+		credentials := auth.MustGetUserCredentials(c)
+		userID, err := bson.ObjectIDFromHex(credentials.UserID)
 
 		if err != nil {
 			return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
@@ -108,16 +102,11 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	if c.Request.Method == http.MethodPut {
 		return nil, http.StatusNotFound, nil
 	}
-	credentialContext, ok := c.Get("credential")
-	if !ok {
-		return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
-	}
-	credential := credentialContext.(auth.Credential)
-
+	credentials := auth.MustGetUserCredentials(c)
 	var targetUserID bson.ObjectID
 
 	if id == "me" {
-		objID, err := bson.ObjectIDFromHex(credential.UserID)
+		objID, err := bson.ObjectIDFromHex(credentials.UserID)
 		if err != nil {
 			return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
 		}
@@ -174,7 +163,31 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 		"user": responseSchema,
 	}, http.StatusOK, nil
 }
-func (resource *User) Delete(_ string, _ *gin.Context) (gin.H, int, error) {
-	return nil, http.StatusNoContent, nil
 
+func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
+	credentials := auth.MustGetUserCredentials(c)
+
+	var targetID string
+	if id == "me" {
+		targetID = credentials.UserID
+	} else {
+		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+	}
+
+	userID, err := bson.ObjectIDFromHex(targetID)
+	if err != nil {
+		return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
+	}
+
+	result, err := resource.repository.DeleteByID(userID)
+	if err != nil {
+		log.Println(err)
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+	}
+
+	if result.DeletedCount == 0 {
+		return nil, http.StatusNotFound, paperless.ErrUserNotFound
+	}
+
+	return nil, http.StatusNoContent, nil
 }
