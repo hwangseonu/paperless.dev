@@ -2,8 +2,6 @@ package schema
 
 import (
 	"time"
-
-	"github.com/hwangseonu/paperless.dev/database"
 )
 
 type UserCreateSchema struct {
@@ -28,16 +26,4 @@ type UserResponseSchema struct {
 	ProfileImageURL string    `json:"profileImageURL"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
-}
-
-func (s *UserResponseSchema) FromModel(user database.User) *UserResponseSchema {
-	s.ID = user.ID.Hex()
-	s.Username = user.Username
-	s.Email = user.Email
-	s.Name = user.Name
-	s.Bio = user.Bio
-	s.ProfileImageURL = user.ProfileImageURL
-	s.CreatedAt = user.CreatedAt
-	s.UpdatedAt = user.UpdatedAt
-	return s
 }

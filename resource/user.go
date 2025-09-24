@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
@@ -12,14 +11,13 @@ import (
 	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/database"
 	"github.com/hwangseonu/paperless.dev/schema"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	restful.Resource
-	repository *database.UserRepository
+	repository database.UserRepository
 }
 
 func NewUser() *User {
@@ -50,15 +48,9 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 
 	var password []byte
 	password, _ = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	user.Password = string(password)
 
-	doc := database.User{
-		Username:  user.Username,
-		Password:  string(password),
-		Email:     user.Email,
-		CreatedAt: time.Now(),
-	}
-
-	result, err := resource.repository.InsertOne(doc)
+	result, err := resource.repository.Create(user)
 
 	if err != nil {
 		log.Println(err)
@@ -75,20 +67,14 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		credentials := auth.MustGetUserCredentials(c)
-		userID, err := bson.ObjectIDFromHex(credentials.UserID)
-
-		if err != nil {
-			return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
-		}
-
+		userID := credentials.UserID
 		user, err := resource.repository.FindByID(userID)
 
 		if err != nil {
 			return nil, http.StatusNotFound, paperless.ErrUserNotFound
 		}
 
-		res := new(schema.UserResponseSchema).FromModel(*user)
-		return gin.H{"user": res}, http.StatusOK, nil
+		return gin.H{"user": user.ResponseSchema()}, http.StatusOK, nil
 	}
 
 	return nil, http.StatusOK, nil
@@ -102,65 +88,27 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	if c.Request.Method == http.MethodPut {
 		return nil, http.StatusNotFound, nil
 	}
-	credentials := auth.MustGetUserCredentials(c)
-	var targetUserID bson.ObjectID
 
-	if id == "me" {
-		objID, err := bson.ObjectIDFromHex(credentials.UserID)
-		if err != nil {
-			return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
-		}
-		targetUserID = objID
-	} else {
-		// TODO: Admin permission is required to update other users.
+	credentials := auth.MustGetUserCredentials(c)
+
+	if id != "me" {
 		return nil, http.StatusForbidden, paperless.ErrAccessDenied
 	}
 
-	updateBody := body.(*schema.UserUpdateSchema)
-	updateFields := bson.M{}
+	targetID := credentials.UserID
+	updateSchema := body.(*schema.UserUpdateSchema)
 
-	if updateBody.Username != nil {
-		updateFields["username"] = *updateBody.Username
-	}
-	if updateBody.Email != nil {
-		updateFields["email"] = *updateBody.Email
-	}
-	if updateBody.Name != nil {
-		updateFields["name"] = *updateBody.Name
-	}
-	if updateBody.Bio != nil {
-		updateFields["bio"] = *updateBody.Bio
-	}
-
-	if len(updateFields) == 0 {
-		return nil, http.StatusBadRequest, errors.New("no fields to update")
-	}
-
-	updateFields["updatedAt"] = time.Now()
-
-	result, err := resource.repository.UpdateOne(targetUserID, updateFields)
-
+	updatedUser, err := resource.repository.Update(targetID, updateSchema)
 	if err != nil {
 		log.Println(err)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, http.StatusNotFound, paperless.ErrUserNotFound
+		}
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
-	if result.MatchedCount == 0 {
-		return nil, http.StatusNotFound, paperless.ErrUserNotFound
-	}
-	if result.ModifiedCount == 0 {
-		return nil, http.StatusNotModified, errors.New("no changes made")
-	}
-
-	updatedUser, err := resource.repository.FindByID(targetUserID)
-	if err != nil {
-		return nil, http.StatusInternalServerError, errors.New("failed to retrieve updated user")
-	}
-
-	responseSchema := new(schema.UserResponseSchema).FromModel(*updatedUser)
-
 	return gin.H{
-		"user": responseSchema,
+		"user": updatedUser.ResponseSchema(),
 	}, http.StatusOK, nil
 }
 
@@ -174,19 +122,10 @@ func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
 		return nil, http.StatusForbidden, paperless.ErrAccessDenied
 	}
 
-	userID, err := bson.ObjectIDFromHex(targetID)
-	if err != nil {
-		return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
-	}
-
-	result, err := resource.repository.DeleteByID(userID)
+	err := resource.repository.DeleteByID(targetID)
 	if err != nil {
 		log.Println(err)
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
-	}
-
-	if result.DeletedCount == 0 {
-		return nil, http.StatusNotFound, paperless.ErrUserNotFound
 	}
 
 	return nil, http.StatusNoContent, nil

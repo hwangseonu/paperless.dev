@@ -16,7 +16,7 @@ import (
 
 type Resume struct {
 	repository     *database.ResumeRepository
-	userRepository *database.UserRepository
+	userRepository database.UserRepository
 }
 
 func NewResume() *Resume {
@@ -62,8 +62,7 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
-	res := new(schema.ResumeResponseSchema).FromModel(*doc)
-	return gin.H{"resume": res}, http.StatusOK, nil
+	return gin.H{"resume": doc.FromModel()}, http.StatusOK, nil
 }
 
 func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
@@ -88,8 +87,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	}
 
 	if resume.Public || resume.UserID.Hex() == userID {
-		res := new(schema.ResumeResponseSchema).FromModel(*resume)
-		return gin.H{"resume": res}, http.StatusOK, nil
+		return gin.H{"resume": resume.FromModel()}, http.StatusOK, nil
 	}
 
 	return nil, http.StatusForbidden, paperless.ErrAccessDenied
