@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
 	"slices"
 	"strings"
@@ -40,35 +39,33 @@ func (p *Protector) RegisterAny(path string) {
 	)
 }
 
-func Authorize(c *gin.Context) (int, error) {
+func Authorize(c *gin.Context) (*UserCredentials, error) {
 	authHeader := c.Request.Header.Get("Authorization")
 
 	if authHeader == "" {
-		return http.StatusUnauthorized, errors.New("no authorization header")
+		return nil, paperless.ErrUnauthorized
 	}
 
 	parts := strings.SplitN(authHeader, " ", 2)
 	if !(len(parts) == 2 && parts[0] == "Bearer") {
-		return http.StatusUnauthorized, errors.New("authorization header format must be 'Bearer <token>'")
+		return nil, paperless.ErrInvalidInput
 	}
 
 	token := parts[1]
 	claims, err := ParseToken(token)
 
 	if err != nil {
-		return http.StatusUnauthorized, paperless.ErrInvalidToken
+		return nil, paperless.ErrInvalidToken
 	}
 
 	if claims.Subject != "access" {
-		return http.StatusUnauthorized, paperless.ErrInvalidToken
+		return nil, paperless.ErrInvalidToken
 	}
 
-	c.Set("credential", UserCredentials{
+	return &UserCredentials{
 		UserID: claims.UserID,
 		Roles:  claims.Roles,
-	})
-
-	return http.StatusOK, nil
+	}, nil
 
 }
 
@@ -79,13 +76,14 @@ func (p *Protector) Middleware() gin.HandlerFunc {
 			return
 		}
 
-		status, err := Authorize(c)
+		credentials, err := Authorize(c)
 		if err != nil {
-			c.JSON(status, gin.H{"error": err.Error()})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 			c.Abort()
 			return
 		}
 
+		c.Set("credential", credentials)
 		c.Next()
 	}
 }

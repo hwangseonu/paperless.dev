@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/hwangseonu/paperless.dev"
 	"github.com/hwangseonu/paperless.dev/schema"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -69,7 +70,7 @@ func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, erro
 
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		return nil, err
+		return nil, paperless.ErrDatabase
 	}
 
 	doc.ID = result.InsertedID.(bson.ObjectID)
@@ -79,13 +80,16 @@ func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, erro
 func (r *MongoUserRepository) FindByID(id string) (*User, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.New("invalid user ID format")
+		return nil, paperless.ErrInvalidUserID
 	}
 
 	var user User
 	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, paperless.ErrUserNotFound
+		}
+		return nil, paperless.ErrDatabase
 	}
 
 	return &user, nil
@@ -95,7 +99,10 @@ func (r *MongoUserRepository) FindByUsername(username string) (*User, error) {
 	var user User
 	err := r.collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&user)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, paperless.ErrUserNotFound
+		}
+		return nil, paperless.ErrDatabase
 	}
 
 	return &user, nil
@@ -112,7 +119,10 @@ func (r *MongoUserRepository) FindByUsernameOrEmail(username, email string) (*Us
 	var user User
 	err := r.collection.FindOne(context.Background(), filter).Decode(&user)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, paperless.ErrUserNotFound
+		}
+		return nil, paperless.ErrDatabase
 	}
 
 	return &user, nil
@@ -121,7 +131,7 @@ func (r *MongoUserRepository) FindByUsernameOrEmail(username, email string) (*Us
 func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema) (*User, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.New("invalid schema ID format")
+		return nil, paperless.ErrInvalidUserID
 	}
 	updateFields := bson.M{}
 
@@ -147,7 +157,10 @@ func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema)
 	var updatedUser User
 	err = r.collection.FindOneAndUpdate(context.TODO(), filter, update, opt).Decode(&updatedUser)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, paperless.ErrUserNotFound
+		}
+		return nil, paperless.ErrDatabase
 	}
 
 	return &updatedUser, nil
@@ -156,12 +169,12 @@ func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema)
 func (r *MongoUserRepository) DeleteByID(id string) error {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.New("invalid user ID format")
+		return paperless.ErrInvalidUserID
 	}
 
 	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
 	if err != nil {
-		return err
+		return paperless.ErrDatabase
 	}
 
 	if result.DeletedCount == 0 {

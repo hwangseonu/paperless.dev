@@ -43,7 +43,7 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	} else if doc != nil {
-		return nil, http.StatusConflict, errors.New("user already exists")
+		return nil, http.StatusConflict, paperless.ErrEntityConflict
 	}
 
 	var password []byte

@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/hwangseonu/paperless.dev"
@@ -132,6 +131,11 @@ func NewResumeRepository() ResumeRepository {
 
 func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resume, error) {
 	userID, err := bson.ObjectIDFromHex(schema.OwnerID)
+
+	if err != nil {
+		return nil, paperless.ErrInvalidUserID
+	}
+
 	doc := Resume{
 		UserID:    userID,
 		Title:     schema.Title,
@@ -143,7 +147,7 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 	}
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		return nil, err
+		return nil, paperless.ErrDatabase
 	}
 	doc.ID = result.InsertedID.(bson.ObjectID)
 	return &doc, nil
@@ -152,13 +156,16 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.New("invalid resume ID format")
+		return nil, paperless.ErrInvalidResumeID
 	}
 
 	doc := new(Resume)
 	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(doc)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, paperless.ErrResumeNotFound
+		}
+		return nil, paperless.ErrDatabase
 	}
 	return doc, nil
 }
@@ -166,7 +173,7 @@ func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
 func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpdateSchema) (*Resume, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.New("invalid resume ID format")
+		return nil, paperless.ErrInvalidResumeID
 	}
 
 	updateFields := bson.M{}
@@ -206,7 +213,9 @@ func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpd
 
 	err = r.collection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&updatedResume)
 	if err != nil {
-		log.Println(err)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, paperless.ErrResumeNotFound
+		}
 		return nil, paperless.ErrDatabase
 	}
 
@@ -216,16 +225,16 @@ func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpd
 func (r *MongoResumeRepository) DeleteByID(id string) error {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.New("invalid resume ID format")
+		return paperless.ErrInvalidResumeID
 	}
 
 	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
 	if err != nil {
-		return err
+		return paperless.ErrDatabase
 	}
 
 	if result.DeletedCount == 0 {
-		return mongo.ErrNoDocuments // 또는 ErrUserNotFound
+		return paperless.ErrResumeNotFound
 	}
 
 	return nil
