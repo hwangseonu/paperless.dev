@@ -119,7 +119,7 @@ func (r *MongoUserRepository) FindByUsernameOrEmail(username, email string) (*Us
 }
 
 func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema) (*User, error) {
-	userID, err := bson.ObjectIDFromHex(id)
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, errors.New("invalid schema ID format")
 	}
@@ -140,16 +140,12 @@ func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema)
 
 	updateFields["updatedAt"] = time.Now()
 
-	filter := bson.M{"_id": userID}
+	filter := bson.M{"_id": objID}
 	update := bson.M{"$set": updateFields}
+	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	var updatedUser User
-	err = r.collection.FindOneAndUpdate(
-		context.TODO(),
-		filter,
-		update,
-		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&updatedUser)
+	err = r.collection.FindOneAndUpdate(context.TODO(), filter, update, opt).Decode(&updatedUser)
 	if err != nil {
 		return nil, err
 	}

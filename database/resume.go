@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/hwangseonu/paperless.dev/schema"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type Experience struct {
@@ -57,7 +59,7 @@ type Resume struct {
 	UpdatedAt   time.Time     `bson:"updatedAt"`
 }
 
-func (resume *Resume) FromModel() *schema.ResumeResponseSchema {
+func (resume *Resume) ResponseSchema() *schema.ResumeResponseSchema {
 	s := &schema.ResumeResponseSchema{}
 	s.ID = resume.ID.Hex()
 	s.Title = resume.Title
@@ -111,26 +113,34 @@ func (resume *Resume) FromModel() *schema.ResumeResponseSchema {
 	return s
 }
 
-type ResumeRepository struct {
+type ResumeRepository interface {
+	Create(schema *schema.ResumeCreateSchema) (*Resume, error)
+	FindByID(id string) (*Resume, error)
+	Update(id string, schema *schema.ResumeUpdateSchema) (*Resume, error)
+	DeleteByID(id string) error
+}
+
+type MongoResumeRepository struct {
 	collection *mongo.Collection
 }
 
-func NewResumeRepository() *ResumeRepository {
-	return &ResumeRepository{
+func NewResumeRepository() ResumeRepository {
+	return &MongoResumeRepository{
 		collection: mongoDatabase.Collection("resumes"),
 	}
 }
 
-func (r *ResumeRepository) FindByID(id bson.ObjectID) (*Resume, error) {
-	doc := new(Resume)
-	err := r.collection.FindOne(context.Background(), bson.M{"_id": id}).Decode(doc)
-	if err != nil {
-		return nil, err
+func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resume, error) {
+	userID, err := bson.ObjectIDFromHex(schema.OwnerID)
+	doc := Resume{
+		UserID:    userID,
+		Title:     schema.Title,
+		Bio:       schema.Bio,
+		Public:    schema.Public,
+		Template:  schema.Template,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
-	return doc, nil
-}
-
-func (r *ResumeRepository) InsertOne(doc Resume) (*Resume, error) {
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
 		return nil, err
@@ -139,15 +149,84 @@ func (r *ResumeRepository) InsertOne(doc Resume) (*Resume, error) {
 	return &doc, nil
 }
 
-func (r *ResumeRepository) UpdateOne(resumeID bson.ObjectID, updateFields bson.M) (*mongo.UpdateResult, error) {
-	filter := bson.M{"_id": resumeID}
-	update := bson.M{"$set": updateFields}
-
-	result, err := r.collection.UpdateOne(context.TODO(), filter, update)
+func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
+	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		log.Println(err)
-		return result, paperless.ErrDatabase
+		return nil, errors.New("invalid resume ID format")
 	}
 
-	return result, nil
+	doc := new(Resume)
+	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(doc)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
+func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpdateSchema) (*Resume, error) {
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, errors.New("invalid resume ID format")
+	}
+
+	updateFields := bson.M{}
+
+	if updateSchema.Title != nil {
+		updateFields["title"] = *updateSchema.Title
+	}
+	if updateSchema.Bio != nil {
+		updateFields["bio"] = *updateSchema.Bio
+	}
+	if updateSchema.Public != nil {
+		updateFields["public"] = *updateSchema.Public
+	}
+	if updateSchema.Template != nil {
+		updateFields["template"] = *updateSchema.Template
+	}
+	if updateSchema.Skills != nil {
+		updateFields["skills"] = *updateSchema.Skills
+	}
+	if updateSchema.Experiences != nil {
+		updateFields["experiences"] = *updateSchema.Experiences
+	}
+	if updateSchema.Educations != nil {
+		updateFields["educations"] = *updateSchema.Educations
+	}
+	if updateSchema.Projects != nil {
+		updateFields["projects"] = *updateSchema.Projects
+	}
+
+	updateFields["updatedAt"] = time.Now()
+
+	filter := bson.M{"_id": objID}
+	update := bson.M{"$set": updateFields}
+	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var updatedResume Resume
+
+	err = r.collection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&updatedResume)
+	if err != nil {
+		log.Println(err)
+		return nil, paperless.ErrDatabase
+	}
+
+	return &updatedResume, nil
+}
+
+func (r *MongoResumeRepository) DeleteByID(id string) error {
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid resume ID format")
+	}
+
+	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return mongo.ErrNoDocuments // 또는 ErrUserNotFound
+	}
+
+	return nil
 }

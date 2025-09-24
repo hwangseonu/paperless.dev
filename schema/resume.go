@@ -9,6 +9,7 @@ type ResumeCreateSchema struct {
 	Bio      string `json:"bio,omitempty"`
 	Public   bool   `json:"public,omitempty"`
 	Template string `json:"template,omitempty"`
+	OwnerID  string `json:"-"`
 }
 
 type ExperienceResponseSchema struct {

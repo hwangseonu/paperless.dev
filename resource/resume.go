@@ -2,20 +2,19 @@ package resource
 
 import (
 	"errors"
+	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hwangseonu/paperless.dev"
 	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/database"
 	"github.com/hwangseonu/paperless.dev/schema"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type Resume struct {
-	repository     *database.ResumeRepository
+	repository     database.ResumeRepository
 	userRepository database.UserRepository
 }
 
@@ -41,28 +40,16 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 	credential := c.MustGet("credential")
 
 	userCred := credential.(auth.UserCredentials)
-	userID, err := bson.ObjectIDFromHex(userCred.UserID)
+	createSchema := body.(*schema.ResumeCreateSchema)
+	createSchema.OwnerID = userCred.UserID
 
-	if err != nil {
-		return nil, http.StatusUnauthorized, paperless.ErrInvalidToken
-	}
+	resume, err := resource.repository.Create(createSchema)
 
-	resume := body.(*schema.ResumeCreateSchema)
-
-	doc, err := resource.repository.InsertOne(database.Resume{
-		UserID:    userID,
-		Title:     resume.Title,
-		Bio:       resume.Bio,
-		Public:    resume.Public,
-		Template:  resume.Template,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	})
 	if err != nil {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
-	return gin.H{"resume": doc.FromModel()}, http.StatusOK, nil
+	return gin.H{"createSchema": resume.ResponseSchema()}, http.StatusOK, nil
 }
 
 func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
@@ -73,11 +60,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 		userID = credentials.UserID
 	}
 
-	docID, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, http.StatusBadRequest, paperless.ErrInvalidID
-	}
-	resume, err := resource.repository.FindByID(docID)
+	resume, err := resource.repository.FindByID(id)
 
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -87,7 +70,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	}
 
 	if resume.Public || resume.UserID.Hex() == userID {
-		return gin.H{"resume": resume.FromModel()}, http.StatusOK, nil
+		return gin.H{"resume": resume.ResponseSchema()}, http.StatusOK, nil
 	}
 
 	return nil, http.StatusForbidden, paperless.ErrAccessDenied
@@ -108,14 +91,9 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 		return nil, http.StatusUnauthorized, paperless.ErrUnauthorized
 	}
 	credential := credentialContext.(auth.UserCredentials)
-	ownerID, _ := bson.ObjectIDFromHex(credential.UserID)
+	userID := credential.UserID
 
-	resumeID, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, http.StatusNotFound, paperless.ErrInvalidID
-	}
-
-	resumeDoc, err := resource.repository.FindByID(resumeID)
+	resumeDoc, err := resource.repository.FindByID(id)
 
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -124,60 +102,41 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
-	if resumeDoc.UserID != ownerID {
+	if resumeDoc.UserID.Hex() != userID {
 		return nil, http.StatusForbidden, paperless.ErrAccessDenied
 	}
 
 	updateBody := body.(*schema.ResumeUpdateSchema)
+	result, err := resource.repository.Update(id, updateBody)
 
-	updateFields := bson.M{}
-	if updateBody.Title != nil {
-		updateFields["title"] = *updateBody.Title
-	}
-	if updateBody.Bio != nil {
-		updateFields["bio"] = *updateBody.Bio
-	}
-	if updateBody.Public != nil {
-		updateFields["public"] = *updateBody.Public
-	}
-	if updateBody.Template != nil {
-		updateFields["template"] = *updateBody.Template
-	}
-	if updateBody.Skills != nil {
-		updateFields["skills"] = *updateBody.Skills
-	}
-	if updateBody.Experiences != nil {
-		updateFields["experiences"] = *updateBody.Experiences
-	}
-	if updateBody.Educations != nil {
-		updateFields["educations"] = *updateBody.Educations
-	}
-	if updateBody.Projects != nil {
-		updateFields["projects"] = *updateBody.Projects
-	}
-
-	if len(updateFields) == 0 {
-		return nil, http.StatusBadRequest, paperless.ErrNoChanges
-	}
-
-	updateFields["updatedAt"] = time.Now()
-
-	result, err := resource.repository.UpdateOne(resumeID, updateFields)
 	if err != nil {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
-	if result.MatchedCount == 0 {
-		return nil, http.StatusNotFound, paperless.ErrResumeNotFound
+	return gin.H{"resume": result.ResponseSchema()}, http.StatusOK, nil
+}
+
+func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
+	credentials := auth.MustGetUserCredentials(c)
+	userID := credentials.UserID
+	resumeDoc, err := resource.repository.FindByID(id)
+
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
+		}
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
-	if result.ModifiedCount == 0 {
-		return nil, http.StatusNotModified, paperless.ErrNoChanges
+
+	if resumeDoc.UserID.Hex() != userID {
+		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+	}
+
+	err = resource.repository.DeleteByID(id)
+	if err != nil {
+		log.Println(err)
+		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
 	return nil, http.StatusNoContent, nil
-}
-
-func (resource *Resume) Delete(_ string, _ *gin.Context) (gin.H, int, error) {
-	//TODO implement me
-	panic("implement me")
 }
