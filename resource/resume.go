@@ -10,7 +10,6 @@ import (
 	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/database"
 	"github.com/hwangseonu/paperless.dev/schema"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type Resume struct {
@@ -63,7 +62,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	resume, err := resource.repository.FindByID(id)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, paperless.ErrResumeNotFound) {
 			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
 		}
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
@@ -96,7 +95,7 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 	resumeDoc, err := resource.repository.FindByID(id)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, paperless.ErrResumeNotFound) {
 			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
 		}
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
@@ -122,7 +121,7 @@ func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	resumeDoc, err := resource.repository.FindByID(id)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, paperless.ErrResumeNotFound) {
 			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
 		}
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase

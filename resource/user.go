@@ -11,7 +11,6 @@ import (
 	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/database"
 	"github.com/hwangseonu/paperless.dev/schema"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,7 +39,7 @@ func (resource *User) RequestBody(method string) interface{} {
 func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, error) {
 	user := body.(*schema.UserCreateSchema)
 
-	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, paperless.ErrUserNotFound) {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	} else if doc != nil {
 		return nil, http.StatusConflict, paperless.ErrEntityConflict
@@ -101,7 +100,7 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	updatedUser, err := resource.repository.Update(targetID, updateSchema)
 	if err != nil {
 		log.Println(err)
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, paperless.ErrUserNotFound) {
 			return nil, http.StatusNotFound, paperless.ErrUserNotFound
 		}
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
