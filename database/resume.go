@@ -45,7 +45,7 @@ type Project struct {
 
 type Resume struct {
 	ID          bson.ObjectID `bson:"_id,omitempty"`
-	UserID      bson.ObjectID `bson:"userId"`
+	OwnerID     bson.ObjectID `bson:"ownerID"`
 	Title       string        `bson:"title"`
 	Bio         string        `bson:"bio,omitempty"`
 	Public      bool          `bson:"public"`
@@ -115,6 +115,7 @@ func (resume *Resume) ResponseSchema() *schema.ResumeResponseSchema {
 type ResumeRepository interface {
 	Create(schema *schema.ResumeCreateSchema) (*Resume, error)
 	FindByID(id string) (*Resume, error)
+	FindManyByOwnerID(ownerID string) ([]Resume, error)
 	Update(id string, schema *schema.ResumeUpdateSchema) (*Resume, error)
 	DeleteByID(id string) error
 }
@@ -137,7 +138,7 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 	}
 
 	doc := Resume{
-		UserID:    userID,
+		OwnerID:   userID,
 		Title:     schema.Title,
 		Bio:       schema.Bio,
 		Public:    schema.Public,
@@ -168,6 +169,26 @@ func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
 		return nil, paperless.ErrDatabase
 	}
 	return doc, nil
+}
+
+func (r *MongoResumeRepository) FindManyByOwnerID(ownerID string) ([]Resume, error) {
+	ownerObjID, err := bson.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return nil, paperless.ErrInvalidUserID
+	}
+	filter := bson.M{"ownerID": ownerObjID}
+
+	cursor, err := r.collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, paperless.ErrDatabase
+	}
+
+	var result []Resume
+	if err = cursor.All(context.Background(), &result); err != nil {
+		return nil, paperless.ErrDatabase
+	}
+
+	return result, nil
 }
 
 func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpdateSchema) (*Resume, error) {

@@ -15,12 +15,12 @@ func GetUserCredentials(c *gin.Context) *UserCredentials {
 		return nil
 	}
 
-	credential := cred.(UserCredentials)
-	return &credential
+	credential := cred.(*UserCredentials)
+	return credential
 }
 
 func MustGetUserCredentials(c *gin.Context) *UserCredentials {
 	cred := c.MustGet("credential")
-	credential := cred.(UserCredentials)
-	return &credential
+	credential := cred.(*UserCredentials)
+	return credential
 }

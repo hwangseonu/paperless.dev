@@ -2,7 +2,6 @@ package resource
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +41,7 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, paperless.ErrUserNotFound) {
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	} else if doc != nil {
-		return nil, http.StatusConflict, paperless.ErrEntityConflict
+		return nil, http.StatusConflict, paperless.ErrUserConflict
 	}
 
 	var password []byte
@@ -52,7 +51,6 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	result, err := resource.repository.Create(user)
 
 	if err != nil {
-		log.Println(err)
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 
@@ -99,7 +97,6 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 
 	updatedUser, err := resource.repository.Update(targetID, updateSchema)
 	if err != nil {
-		log.Println(err)
 		if errors.Is(err, paperless.ErrUserNotFound) {
 			return nil, http.StatusNotFound, paperless.ErrUserNotFound
 		}
@@ -123,7 +120,6 @@ func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
 
 	err := resource.repository.DeleteByID(targetID)
 	if err != nil {
-		log.Println(err)
 		return nil, http.StatusInternalServerError, paperless.ErrDatabase
 	}
 

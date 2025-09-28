@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
+	"github.com/hwangseonu/paperless.dev"
 	"github.com/hwangseonu/paperless.dev/auth"
 	"github.com/hwangseonu/paperless.dev/resource"
 )
@@ -19,6 +20,7 @@ func main() {
 	protector.Register("/api/v1/resumes/:id", http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete)
 
 	engine.Use(protector.Middleware())
+	engine.Use(paperless.ErrorHandler)
 
 	api := restful.NewAPI("/api/v1")
 	{
