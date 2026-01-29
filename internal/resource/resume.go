@@ -45,6 +45,7 @@ func (resource *Resume) RequestBody(method string) any {
 // @Failure 400 {object}	schema.Error
 // @Failure 500 {object}	schema.Error
 // @Router	/resumes [post]
+// @Security     BearerAuth
 func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 
@@ -72,6 +73,7 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 // @Failure 404 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/resumes/{id} [get]
+// @Security BearerAuth
 func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.GetUserCredentials(c)
 	userID := ""
@@ -108,6 +110,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 // @Failure 403 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/resumes [get]
+// @Security BearerAuth
 func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 	credentials := auth.GetUserCredentials(c)
 	userID := ""
@@ -147,6 +150,7 @@ func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 // @Failure 404 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/resumes/{id} [PATCH]
+// @Security     BearerAuth
 func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin.H, int, error) {
 	if c.Request.Method == http.MethodPut {
 		return nil, http.StatusNotFound, nil
@@ -189,6 +193,7 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 // @Failure 404 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/resumes/{id} [DELETE]
+// @Security     BearerAuth
 func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 	userID := credentials.UserID

@@ -1,7 +1,14 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is an api server for Paperless.dev",
+        "title": "Paperless.dev API",
+        "contact": {},
+        "license": {
+            "name": "MIT",
+            "url": "https://raw.githubusercontent.com/hwangseonu/paperless.dev/refs/heads/main/LICENSE"
+        },
+        "version": "1.0"
     },
     "paths": {
         "/auth/login": {
@@ -64,6 +71,11 @@
         },
         "/resumes": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get all resumes",
                 "produces": [
                     "application/json"
@@ -116,6 +128,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "create new resume",
                 "consumes": [
                     "application/json"
@@ -167,6 +184,11 @@
         },
         "/resumes/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get resume by id",
                 "produces": [
                     "application/json"
@@ -223,6 +245,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "delete resume by id",
                 "produces": [
                     "application/json"
@@ -271,6 +298,11 @@
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "update resume by id",
                 "produces": [
                     "application/json"
@@ -395,6 +427,11 @@
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get user info by id",
                 "produces": [
                     "application/json"
@@ -445,6 +482,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "delete user by id",
                 "produces": [
                     "application/json"
@@ -493,6 +535,11 @@
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "update user data by id",
                 "produces": [
                     "application/json"
@@ -934,6 +981,14 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "\"Type 'Bearer ' followed by your API key\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

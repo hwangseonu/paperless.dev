@@ -10,6 +10,10 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {},
+        "license": {
+            "name": "MIT",
+            "url": "https://raw.githubusercontent.com/hwangseonu/paperless.dev/refs/heads/main/LICENSE"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -75,6 +79,11 @@ const docTemplate = `{
         },
         "/resumes": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get all resumes",
                 "produces": [
                     "application/json"
@@ -127,6 +136,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "create new resume",
                 "consumes": [
                     "application/json"
@@ -178,6 +192,11 @@ const docTemplate = `{
         },
         "/resumes/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get resume by id",
                 "produces": [
                     "application/json"
@@ -234,6 +253,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "delete resume by id",
                 "produces": [
                     "application/json"
@@ -282,6 +306,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "update resume by id",
                 "produces": [
                     "application/json"
@@ -406,6 +435,11 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get user info by id",
                 "produces": [
                     "application/json"
@@ -456,6 +490,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "delete user by id",
                 "produces": [
                     "application/json"
@@ -504,6 +543,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "update user data by id",
                 "produces": [
                     "application/json"
@@ -946,17 +990,25 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "\"Type 'Bearer ' followed by your API key\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Paperless.dev API",
+	Description:      "This is an api server for Paperless.dev",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

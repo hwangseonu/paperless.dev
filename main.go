@@ -14,6 +14,17 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Paperless.dev API
+// @version         1.0
+// @description     This is an api server for Paperless.dev
+
+// @license.name  MIT
+// @license.url  https://raw.githubusercontent.com/hwangseonu/paperless.dev/refs/heads/main/LICENSE
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description "Type 'Bearer ' followed by your API key"
 func main() {
 	engine := gin.Default()
 	docs.SwaggerInfo.BasePath = "/api/v1"

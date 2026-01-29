@@ -247,6 +247,12 @@ definitions:
     type: object
 info:
   contact: {}
+  description: This is an api server for Paperless.dev
+  license:
+    name: MIT
+    url: https://raw.githubusercontent.com/hwangseonu/paperless.dev/refs/heads/main/LICENSE
+  title: Paperless.dev API
+  version: "1.0"
 paths:
   /auth/login:
     post:
@@ -318,6 +324,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: get all resumes
       tags:
       - Resume
@@ -350,6 +358,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: create new resume
       tags:
       - Resume
@@ -383,6 +393,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: delete resume by id
       tags:
       - Resume
@@ -420,6 +432,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: get resume by id
       tags:
       - Resume
@@ -463,6 +477,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: update resume by id
       tags:
       - Resume
@@ -533,6 +549,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: delete user by id
       tags:
       - User
@@ -566,6 +584,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: get user info by id
       tags:
       - User
@@ -609,7 +629,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/schema.Error'
+      security:
+      - BearerAuth: []
       summary: update user data by id
       tags:
       - User
+securityDefinitions:
+  BearerAuth:
+    description: '"Type ''Bearer '' followed by your API key"'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

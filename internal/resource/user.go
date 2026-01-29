@@ -84,6 +84,7 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 // @Failure 404 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/users/{id} [get]
+// @Security     BearerAuth
 func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		credentials := auth.MustGetUserCredentials(c)
@@ -117,6 +118,7 @@ func (resource *User) ReadAll(_ *gin.Context) (gin.H, int, error) {
 // @Failure 404 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/users/{id} [PATCH]
+// @Security     BearerAuth
 func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H, int, error) {
 	if c.Request.Method == http.MethodPut {
 		return nil, http.StatusNotFound, nil
@@ -156,6 +158,7 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 // @Failure 404 {object} 	schema.Error
 // @Failure 500 {object} 	schema.Error
 // @Router	/users/{id} [DELETE]
+// @Security     BearerAuth
 func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 
