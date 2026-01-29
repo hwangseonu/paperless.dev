@@ -3,7 +3,7 @@ package database
 import (
 	"log"
 
-	"github.com/hwangseonu/paperless.dev"
+	"github.com/hwangseonu/paperless.dev/internal/common"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -12,7 +12,7 @@ var mongoClient *mongo.Client
 var mongoDatabase *mongo.Database
 
 func init() {
-	config := paperless.GetConfig()
+	config := common.GetConfig()
 	uri := config.MongoURI
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)

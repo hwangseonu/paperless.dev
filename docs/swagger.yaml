@@ -1,0 +1,184 @@
+definitions:
+  schema.EducationResponseSchema:
+    properties:
+      activities:
+        type: string
+      degree:
+        type: string
+      endDate:
+        type: string
+      gpa:
+        type: string
+      id:
+        type: string
+      major:
+        type: string
+      school:
+        type: string
+      startDate:
+        type: string
+    type: object
+  schema.Error:
+    properties:
+      error:
+        properties:
+          code:
+            type: integer
+          message:
+            type: string
+        type: object
+    type: object
+  schema.ExperienceResponseSchema:
+    properties:
+      company:
+        type: string
+      description:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      location:
+        type: string
+      startDate:
+        type: string
+      title:
+        type: string
+    type: object
+  schema.ProjectResponseSchema:
+    properties:
+      description:
+        type: string
+      endDate:
+        type: string
+      id:
+        type: string
+      skills:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  schema.ResumeCreateSchema:
+    properties:
+      bio:
+        type: string
+      public:
+        type: boolean
+      template:
+        type: string
+      title:
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  schema.ResumeResponseSchema:
+    properties:
+      bio:
+        type: string
+      createdAt:
+        type: string
+      educations:
+        items:
+          $ref: '#/definitions/schema.EducationResponseSchema'
+        type: array
+      experiences:
+        items:
+          $ref: '#/definitions/schema.ExperienceResponseSchema'
+        type: array
+      id:
+        type: string
+      projects:
+        items:
+          $ref: '#/definitions/schema.ProjectResponseSchema'
+        type: array
+      public:
+        type: boolean
+      skills:
+        items:
+          type: string
+        type: array
+      template:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /resumes:
+    post:
+      consumes:
+      - application/json
+      description: create new resume
+      parameters:
+      - description: initial values of resume
+        in: body
+        name: resume
+        required: true
+        schema:
+          $ref: '#/definitions/schema.ResumeCreateSchema'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              resume:
+                $ref: '#/definitions/schema.ResumeResponseSchema'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: create new resume
+      tags:
+      - Resume
+  /resumes/{id}:
+    get:
+      description: get resume by id
+      parameters:
+      - description: Resume ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              resume:
+                $ref: '#/definitions/schema.ResumeResponseSchema'
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: get resume by id
+      tags:
+      - Resume
+swagger: "2.0"

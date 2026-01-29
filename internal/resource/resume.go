@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hwangseonu/paperless.dev"
-	"github.com/hwangseonu/paperless.dev/auth"
-	"github.com/hwangseonu/paperless.dev/database"
-	"github.com/hwangseonu/paperless.dev/schema"
+	"github.com/hwangseonu/paperless.dev/internal/auth"
+	"github.com/hwangseonu/paperless.dev/internal/common"
+	"github.com/hwangseonu/paperless.dev/internal/database"
+	"github.com/hwangseonu/paperless.dev/internal/schema"
 )
 
 type Resume struct {
@@ -34,6 +34,17 @@ func (resource *Resume) RequestBody(method string) any {
 	}
 }
 
+// Create *Resume.Create
+// @Summary		create new resume
+// @Description	create new resume
+// @Tags	Resume
+// @Accept	json
+// @Produce	json
+// @Param	resume body	schema.ResumeCreateSchema	true	"initial values of resume"
+// @Success	200	{object}	object{resume=schema.ResumeResponseSchema}
+// @Failure 400 {object}	schema.Error
+// @Failure 500 {object}	schema.Error
+// @Router	/resumes [post]
 func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 
@@ -43,12 +54,24 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 	resume, err := resource.repository.Create(createSchema)
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	return gin.H{"resume": resume.ResponseSchema()}, http.StatusOK, nil
 }
 
+// Read *Resume.Read
+// @Summary	get resume by id
+// @Description	get resume by id
+// @Tags	Resume
+// @Produce	json
+// @Param	id	path	string	true	"Resume ID"
+// @Success 200 {object}	object{resume=schema.ResumeResponseSchema}
+// @Failure 400 {object} 	schema.Error
+// @Failure 403 {object} 	schema.Error
+// @Failure 404 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/resumes/{id} [get]
 func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.GetUserCredentials(c)
 	userID := ""
@@ -61,7 +84,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 
 	if err != nil {
 		status := http.StatusInternalServerError
-		if errors.Is(err, paperless.ErrResumeNotFound) {
+		if errors.Is(err, common.ErrResumeNotFound) {
 			status = http.StatusNotFound
 		}
 		return nil, status, err
@@ -71,7 +94,7 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 		return gin.H{"resume": resume.ResponseSchema()}, http.StatusOK, nil
 	}
 
-	return nil, http.StatusForbidden, paperless.ErrAccessDenied
+	return nil, http.StatusForbidden, common.ErrAccessDenied
 }
 
 func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
@@ -84,7 +107,7 @@ func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 	targetOwner := c.Query("user")
 
 	if targetOwner == userID {
-		return nil, http.StatusBadRequest, paperless.ErrAccessDenied
+		return nil, http.StatusBadRequest, common.ErrAccessDenied
 	}
 
 	resumes, err := resource.repository.FindManyByOwnerID(targetOwner)
@@ -108,25 +131,24 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 
 	credentials := auth.MustGetUserCredentials(c)
 	userID := credentials.UserID
-
 	resumeDoc, err := resource.repository.FindByID(id)
 
 	if err != nil {
-		if errors.Is(err, paperless.ErrResumeNotFound) {
-			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
+		if errors.Is(err, common.ErrResumeNotFound) {
+			return nil, http.StatusNotFound, common.ErrResumeNotFound
 		}
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	if resumeDoc.OwnerID.Hex() != userID {
-		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
 	updateBody := body.(*schema.ResumeUpdateSchema)
 	result, err := resource.repository.Update(id, updateBody)
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	return gin.H{"resume": result.ResponseSchema()}, http.StatusOK, nil
@@ -138,19 +160,19 @@ func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	resumeDoc, err := resource.repository.FindByID(id)
 
 	if err != nil {
-		if errors.Is(err, paperless.ErrResumeNotFound) {
-			return nil, http.StatusNotFound, paperless.ErrResumeNotFound
+		if errors.Is(err, common.ErrResumeNotFound) {
+			return nil, http.StatusNotFound, common.ErrResumeNotFound
 		}
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	if resumeDoc.OwnerID.Hex() != userID {
-		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
 	err = resource.repository.DeleteByID(id)
 	if err != nil {
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	return nil, http.StatusNoContent, nil

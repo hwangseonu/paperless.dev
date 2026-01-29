@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hwangseonu/paperless.dev"
+	"github.com/hwangseonu/paperless.dev/internal/common"
 )
 
 type Protector struct {
@@ -43,23 +43,23 @@ func Authorize(c *gin.Context) (*UserCredentials, error) {
 	authHeader := c.Request.Header.Get("Authorization")
 
 	if authHeader == "" {
-		return nil, paperless.ErrUnauthorized
+		return nil, common.ErrUnauthorized
 	}
 
 	parts := strings.SplitN(authHeader, " ", 2)
 	if !(len(parts) == 2 && parts[0] == "Bearer") {
-		return nil, paperless.ErrInvalidInput
+		return nil, common.ErrInvalidInput
 	}
 
 	token := parts[1]
 	claims, err := ParseToken(token)
 
 	if err != nil {
-		return nil, paperless.ErrInvalidToken
+		return nil, common.ErrInvalidToken
 	}
 
 	if claims.Subject != "access" {
-		return nil, paperless.ErrInvalidToken
+		return nil, common.ErrInvalidToken
 	}
 
 	return &UserCredentials{

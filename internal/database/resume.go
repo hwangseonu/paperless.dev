@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/hwangseonu/paperless.dev"
-	"github.com/hwangseonu/paperless.dev/schema"
+	"github.com/hwangseonu/paperless.dev/internal/common"
+	"github.com/hwangseonu/paperless.dev/internal/schema"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -134,7 +134,7 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 	userID, err := bson.ObjectIDFromHex(schema.OwnerID)
 
 	if err != nil {
-		return nil, paperless.ErrInvalidUserID
+		return nil, common.ErrInvalidUserID
 	}
 
 	doc := Resume{
@@ -148,7 +148,7 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 	}
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 	doc.ID = result.InsertedID.(bson.ObjectID)
 	return &doc, nil
@@ -157,16 +157,16 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, paperless.ErrInvalidResumeID
+		return nil, common.ErrInvalidResumeID
 	}
 
 	doc := new(Resume)
 	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(doc)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, paperless.ErrResumeNotFound
+			return nil, common.ErrResumeNotFound
 		}
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 	return doc, nil
 }
@@ -174,18 +174,18 @@ func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
 func (r *MongoResumeRepository) FindManyByOwnerID(ownerID string) ([]Resume, error) {
 	ownerObjID, err := bson.ObjectIDFromHex(ownerID)
 	if err != nil {
-		return nil, paperless.ErrInvalidUserID
+		return nil, common.ErrInvalidUserID
 	}
 	filter := bson.M{"ownerID": ownerObjID}
 
 	cursor, err := r.collection.Find(context.Background(), filter)
 	if err != nil {
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	var result []Resume
 	if err = cursor.All(context.Background(), &result); err != nil {
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	return result, nil
@@ -194,7 +194,7 @@ func (r *MongoResumeRepository) FindManyByOwnerID(ownerID string) ([]Resume, err
 func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpdateSchema) (*Resume, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, paperless.ErrInvalidResumeID
+		return nil, common.ErrInvalidResumeID
 	}
 
 	updateFields := bson.M{}
@@ -235,9 +235,9 @@ func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpd
 	err = r.collection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&updatedResume)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, paperless.ErrResumeNotFound
+			return nil, common.ErrResumeNotFound
 		}
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	return &updatedResume, nil
@@ -246,16 +246,16 @@ func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpd
 func (r *MongoResumeRepository) DeleteByID(id string) error {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return paperless.ErrInvalidResumeID
+		return common.ErrInvalidResumeID
 	}
 
 	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
 	if err != nil {
-		return paperless.ErrDatabase
+		return common.ErrDatabase
 	}
 
 	if result.DeletedCount == 0 {
-		return paperless.ErrResumeNotFound
+		return common.ErrResumeNotFound
 	}
 
 	return nil

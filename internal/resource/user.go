@@ -6,10 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	restful "github.com/hwangseonu/gin-restful"
-	"github.com/hwangseonu/paperless.dev"
-	"github.com/hwangseonu/paperless.dev/auth"
-	"github.com/hwangseonu/paperless.dev/database"
-	"github.com/hwangseonu/paperless.dev/schema"
+	"github.com/hwangseonu/paperless.dev/internal/auth"
+	"github.com/hwangseonu/paperless.dev/internal/common"
+	"github.com/hwangseonu/paperless.dev/internal/database"
+	"github.com/hwangseonu/paperless.dev/internal/schema"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,10 +38,10 @@ func (resource *User) RequestBody(method string) interface{} {
 func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, error) {
 	user := body.(*schema.UserCreateSchema)
 
-	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, paperless.ErrUserNotFound) {
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, common.ErrUserNotFound) {
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	} else if doc != nil {
-		return nil, http.StatusConflict, paperless.ErrUserConflict
+		return nil, http.StatusConflict, common.ErrUserConflict
 	}
 
 	var password []byte
@@ -51,7 +51,7 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	result, err := resource.repository.Create(user)
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	return gin.H{
@@ -68,7 +68,7 @@ func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 		user, err := resource.repository.FindByID(userID)
 
 		if err != nil {
-			return nil, http.StatusNotFound, paperless.ErrUserNotFound
+			return nil, http.StatusNotFound, common.ErrUserNotFound
 		}
 
 		return gin.H{"user": user.ResponseSchema()}, http.StatusOK, nil
@@ -89,7 +89,7 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	credentials := auth.MustGetUserCredentials(c)
 
 	if id != "me" {
-		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
 	targetID := credentials.UserID
@@ -97,10 +97,10 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 
 	updatedUser, err := resource.repository.Update(targetID, updateSchema)
 	if err != nil {
-		if errors.Is(err, paperless.ErrUserNotFound) {
-			return nil, http.StatusNotFound, paperless.ErrUserNotFound
+		if errors.Is(err, common.ErrUserNotFound) {
+			return nil, http.StatusNotFound, common.ErrUserNotFound
 		}
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	return gin.H{
@@ -115,12 +115,12 @@ func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		targetID = credentials.UserID
 	} else {
-		return nil, http.StatusForbidden, paperless.ErrAccessDenied
+		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
 	err := resource.repository.DeleteByID(targetID)
 	if err != nil {
-		return nil, http.StatusInternalServerError, paperless.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
 	return nil, http.StatusNoContent, nil

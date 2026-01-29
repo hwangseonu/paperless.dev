@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hwangseonu/paperless.dev"
-	"github.com/hwangseonu/paperless.dev/database"
+	"github.com/hwangseonu/paperless.dev/internal/common"
+	"github.com/hwangseonu/paperless.dev/internal/database"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,16 +27,16 @@ func LoginHandler(c *gin.Context) {
 
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": paperless.ErrUserNotFound})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": common.ErrUserNotFound})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": paperless.ErrDatabase})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": common.ErrDatabase})
 		}
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": paperless.ErrUnauthorized})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": common.ErrUnauthorized})
 		return
 	}
 
@@ -46,7 +46,7 @@ func LoginHandler(c *gin.Context) {
 	if err1 != nil || err2 != nil {
 		err = errors.Join(err1, err2)
 		log.Println("an error occurred while generate tokens", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": paperless.ErrInvalidToken})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": common.ErrInvalidToken})
 		return
 	}
 

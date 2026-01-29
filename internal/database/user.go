@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/hwangseonu/paperless.dev"
-	"github.com/hwangseonu/paperless.dev/schema"
+	"github.com/hwangseonu/paperless.dev/internal/common"
+	"github.com/hwangseonu/paperless.dev/internal/schema"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -70,7 +70,7 @@ func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, erro
 
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	doc.ID = result.InsertedID.(bson.ObjectID)
@@ -80,16 +80,16 @@ func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, erro
 func (r *MongoUserRepository) FindByID(id string) (*User, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, paperless.ErrInvalidUserID
+		return nil, common.ErrInvalidUserID
 	}
 
 	var user User
 	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, paperless.ErrUserNotFound
+			return nil, common.ErrUserNotFound
 		}
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	return &user, nil
@@ -100,9 +100,9 @@ func (r *MongoUserRepository) FindByUsername(username string) (*User, error) {
 	err := r.collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, paperless.ErrUserNotFound
+			return nil, common.ErrUserNotFound
 		}
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	return &user, nil
@@ -120,9 +120,9 @@ func (r *MongoUserRepository) FindByUsernameOrEmail(username, email string) (*Us
 	err := r.collection.FindOne(context.Background(), filter).Decode(&user)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, paperless.ErrUserNotFound
+			return nil, common.ErrUserNotFound
 		}
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	return &user, nil
@@ -131,7 +131,7 @@ func (r *MongoUserRepository) FindByUsernameOrEmail(username, email string) (*Us
 func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema) (*User, error) {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, paperless.ErrInvalidUserID
+		return nil, common.ErrInvalidUserID
 	}
 	updateFields := bson.M{}
 
@@ -158,9 +158,9 @@ func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema)
 	err = r.collection.FindOneAndUpdate(context.TODO(), filter, update, opt).Decode(&updatedUser)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, paperless.ErrUserNotFound
+			return nil, common.ErrUserNotFound
 		}
-		return nil, paperless.ErrDatabase
+		return nil, common.ErrDatabase
 	}
 
 	return &updatedUser, nil
@@ -169,12 +169,12 @@ func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema)
 func (r *MongoUserRepository) DeleteByID(id string) error {
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return paperless.ErrInvalidUserID
+		return common.ErrInvalidUserID
 	}
 
 	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
 	if err != nil {
-		return paperless.ErrDatabase
+		return common.ErrDatabase
 	}
 
 	if result.DeletedCount == 0 {

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/hwangseonu/paperless.dev"
+	"github.com/hwangseonu/paperless.dev/internal/common"
 )
 
 type Claims struct {
@@ -17,7 +17,7 @@ const accessTokenDuration = time.Hour * 24
 const refreshTokenDuration = time.Hour * 24 * 30
 
 func GenerateToken(userID string, subject string) (string, error) {
-	secret := []byte(paperless.GetConfig().JwtSecret)
+	secret := []byte(common.GetConfig().JwtSecret)
 
 	now := time.Now()
 	duration := now
@@ -49,7 +49,7 @@ func GenerateToken(userID string, subject string) (string, error) {
 
 func ParseToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(paperless.GetConfig().JwtSecret), nil
+		return []byte(common.GetConfig().JwtSecret), nil
 	})
 
 	if err != nil {
@@ -57,7 +57,7 @@ func ParseToken(tokenString string) (*Claims, error) {
 	}
 
 	if !token.Valid {
-		return nil, paperless.ErrInvalidToken
+		return nil, common.ErrInvalidToken
 	}
 
 	return token.Claims.(*Claims), err

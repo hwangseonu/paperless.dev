@@ -1,4 +1,4 @@
-package paperless
+package common
 
 import "os"
 
