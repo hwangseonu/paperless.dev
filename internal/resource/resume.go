@@ -120,8 +120,10 @@ func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 
 	targetOwner := c.Query("user")
 
-	if targetOwner == userID {
-		return nil, http.StatusBadRequest, common.ErrAccessDenied
+	if targetOwner == "me" {
+		targetOwner = userID
+	} else if targetOwner == userID {
+		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
 	resumes, err := resource.repository.FindManyByOwnerID(targetOwner)
