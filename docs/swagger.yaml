@@ -18,6 +18,23 @@ definitions:
       startDate:
         type: string
     type: object
+  schema.EducationUpdateSchema:
+    properties:
+      activities:
+        type: string
+      degree:
+        type: string
+      endDate:
+        type: string
+      gpa:
+        type: string
+      major:
+        type: string
+      school:
+        type: string
+      startDate:
+        type: string
+    type: object
   schema.Error:
     properties:
       error:
@@ -45,6 +62,21 @@ definitions:
       title:
         type: string
     type: object
+  schema.ExperienceUpdateSchema:
+    properties:
+      company:
+        type: string
+      description:
+        type: string
+      endDate:
+        type: string
+      location:
+        type: string
+      startDate:
+        type: string
+      title:
+        type: string
+    type: object
   schema.ProjectResponseSchema:
     properties:
       description:
@@ -52,6 +84,23 @@ definitions:
       endDate:
         type: string
       id:
+        type: string
+      skills:
+        items:
+          type: string
+        type: array
+      startDate:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  schema.ProjectUpdateSchema:
+    properties:
+      description:
+        type: string
+      endDate:
         type: string
       skills:
         items:
@@ -111,10 +160,71 @@ definitions:
       updatedAt:
         type: string
     type: object
+  schema.ResumeUpdateSchema:
+    properties:
+      bio:
+        type: string
+      educations:
+        items:
+          $ref: '#/definitions/schema.EducationUpdateSchema'
+        type: array
+      experiences:
+        items:
+          $ref: '#/definitions/schema.ExperienceUpdateSchema'
+        type: array
+      projects:
+        items:
+          $ref: '#/definitions/schema.ProjectUpdateSchema'
+        type: array
+      public:
+        type: boolean
+      skills:
+        items:
+          type: string
+        type: array
+      template:
+        type: string
+      title:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
   /resumes:
+    get:
+      description: get all resumes
+      parameters:
+      - description: Owner ID of resumes
+        in: query
+        name: user
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              resumes:
+                items:
+                  $ref: '#/definitions/schema.ResumeResponseSchema'
+                type: array
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: get all resumes
+      tags:
+      - Resume
     post:
       consumes:
       - application/json
@@ -148,6 +258,38 @@ paths:
       tags:
       - Resume
   /resumes/{id}:
+    delete:
+      description: delete resume by id
+      parameters:
+      - description: Resume ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: delete resume by id
+      tags:
+      - Resume
     get:
       description: get resume by id
       parameters:
@@ -166,6 +308,10 @@ paths:
               resume:
                 $ref: '#/definitions/schema.ResumeResponseSchema'
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
         "403":
           description: Forbidden
           schema:
@@ -179,6 +325,49 @@ paths:
           schema:
             $ref: '#/definitions/schema.Error'
       summary: get resume by id
+      tags:
+      - Resume
+    patch:
+      description: update resume by id
+      parameters:
+      - description: Resume ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: update values of resume
+        in: body
+        name: resume
+        required: true
+        schema:
+          $ref: '#/definitions/schema.ResumeUpdateSchema'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              resume:
+                $ref: '#/definitions/schema.ResumeResponseSchema'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: update resume by id
       tags:
       - Resume
 swagger: "2.0"

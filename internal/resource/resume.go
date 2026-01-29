@@ -97,6 +97,17 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 	return nil, http.StatusForbidden, common.ErrAccessDenied
 }
 
+// ReadAll *Resume.ReadAll
+// @Summary	get all resumes
+// @Description	get all resumes
+// @Tags	Resume
+// @Produce	json
+// @Param	user	query	string	false 	"Owner ID of resumes"
+// @Success 200 {object}	object{resumes=[]schema.ResumeResponseSchema}
+// @Failure 400 {object} 	schema.Error
+// @Failure 403 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/resumes [get]
 func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 	credentials := auth.GetUserCredentials(c)
 	userID := ""
@@ -121,9 +132,21 @@ func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 	}
 
 	return gin.H{"resumes": res}, http.StatusOK, nil
-
 }
 
+// Update *Resume.Update
+// @Summary	update resume by id
+// @Description	update resume by id
+// @Tags	Resume
+// @Produce	json
+// @Param	id	path	string	true	"Resume ID"
+// @Param	resume body	schema.ResumeUpdateSchema	true	"update values of resume"
+// @Success 200 {object}	object{resume=schema.ResumeResponseSchema}
+// @Failure 400 {object} 	schema.Error
+// @Failure 403 {object} 	schema.Error
+// @Failure 404 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/resumes/{id} [PATCH]
 func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin.H, int, error) {
 	if c.Request.Method == http.MethodPut {
 		return nil, http.StatusNotFound, nil
@@ -154,6 +177,18 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 	return gin.H{"resume": result.ResponseSchema()}, http.StatusOK, nil
 }
 
+// Delete *Resume.Delete
+// @Summary	delete resume by id
+// @Description	delete resume by id
+// @Tags	Resume
+// @Produce	json
+// @Param	id	path	string	true	"Resume ID"
+// @Success 204
+// @Failure 400 {object} 	schema.Error
+// @Failure 403 {object} 	schema.Error
+// @Failure 404 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/resumes/{id} [DELETE]
 func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 	userID := credentials.UserID
