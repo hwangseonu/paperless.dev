@@ -3,14 +3,14 @@ package auth
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/hwangseonu/paperless.dev/internal/common"
 )
 
 type Claims struct {
 	UserID string   `json:"userid"`
 	Roles  []string `json:"roles"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 const accessTokenDuration = time.Hour * 24
@@ -19,24 +19,23 @@ const refreshTokenDuration = time.Hour * 24 * 30
 func GenerateToken(userID string, subject string) (string, error) {
 	secret := []byte(common.GetConfig().JwtSecret)
 
-	now := time.Now()
-	duration := now
+	now := &jwt.NumericDate{Time: time.Now()}
+	duration := &jwt.NumericDate{Time: time.Now()}
 	if subject == "access" {
-		duration = duration.Add(accessTokenDuration)
+		duration.Time = duration.Add(accessTokenDuration)
 	} else {
-		duration = duration.Add(refreshTokenDuration)
+		duration.Time = duration.Add(refreshTokenDuration)
 	}
 
 	claims := Claims{
 		UserID: userID,
 		Roles:  []string{"user"},
-		StandardClaims: jwt.StandardClaims{
-			Audience:  "paperless.dev",
-			ExpiresAt: duration.Unix(),
-			Id:        "",
-			IssuedAt:  now.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{"paperless.dev"},
+			ExpiresAt: duration,
+			IssuedAt:  now,
 			Issuer:    "paperless.dev",
-			NotBefore: now.Unix(),
+			NotBefore: now,
 			Subject:   subject,
 		},
 	}
