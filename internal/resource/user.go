@@ -35,6 +35,18 @@ func (resource *User) RequestBody(method string) interface{} {
 	}
 }
 
+// Create *User.Create
+// @Summary		create new user
+// @Description	create new user
+// @Tags	User
+// @Accept	json
+// @Produce	json
+// @Param	user body	schema.UserCreateSchema	true	"initial values of user"
+// @Success	201	{object}	object{user=schema.UserResponseSchema}
+// @Failure 400 {object}	schema.Error
+// @Failure 409 {object}	schema.Error
+// @Failure 500 {object}	schema.Error
+// @Router	/users [post]
 func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, error) {
 	user := body.(*schema.UserCreateSchema)
 
@@ -61,6 +73,17 @@ func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, erro
 	}, http.StatusCreated, nil
 }
 
+// Read *User.Read
+// @Summary	get user info by id
+// @Description	get user info by id
+// @Tags	User
+// @Produce	json
+// @Param	id	path	string	true	"User ID, Pass 'me' to retrieve your data."
+// @Success 200 {object}	object{user=schema.UserResponseSchema}
+// @Failure 400 {object} 	schema.Error
+// @Failure 404 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/users/{id} [get]
 func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		credentials := auth.MustGetUserCredentials(c)
@@ -81,6 +104,19 @@ func (resource *User) ReadAll(_ *gin.Context) (gin.H, int, error) {
 	return nil, http.StatusNotFound, nil
 }
 
+// Update *User.Update
+// @Summary	update user data by id
+// @Description	update user data by id
+// @Tags	User
+// @Produce	json
+// @Param	id	path	string	true	"User ID, Pass 'me' to delete your data."
+// @Param	user body	schema.UserUpdateSchema	true	"update values of User"
+// @Success 200 {object}	object{user=schema.UserResponseSchema}
+// @Failure 400 {object} 	schema.Error
+// @Failure 403 {object} 	schema.Error
+// @Failure 404 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/users/{id} [PATCH]
 func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H, int, error) {
 	if c.Request.Method == http.MethodPut {
 		return nil, http.StatusNotFound, nil
@@ -108,6 +144,18 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	}, http.StatusOK, nil
 }
 
+// Delete *User.Delete
+// @Summary	delete user by id
+// @Description	delete user by id
+// @Tags	User
+// @Produce	json
+// @Param	id	path	string	true	"User ID, Pass 'me' to delete your data."
+// @Success 204
+// @Failure 400 {object} 	schema.Error
+// @Failure 403 {object} 	schema.Error
+// @Failure 404 {object} 	schema.Error
+// @Failure 500 {object} 	schema.Error
+// @Router	/users/{id} [DELETE]
 func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 

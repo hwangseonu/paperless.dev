@@ -41,7 +41,7 @@ func (resource *Resume) RequestBody(method string) any {
 // @Accept	json
 // @Produce	json
 // @Param	resume body	schema.ResumeCreateSchema	true	"initial values of resume"
-// @Success	200	{object}	object{resume=schema.ResumeResponseSchema}
+// @Success	201	{object}	object{resume=schema.ResumeResponseSchema}
 // @Failure 400 {object}	schema.Error
 // @Failure 500 {object}	schema.Error
 // @Router	/resumes [post]
@@ -57,7 +57,7 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 		return nil, http.StatusInternalServerError, common.ErrDatabase
 	}
 
-	return gin.H{"resume": resume.ResponseSchema()}, http.StatusOK, nil
+	return gin.H{"resume": resume.ResponseSchema()}, http.StatusCreated, nil
 }
 
 // Read *Resume.Read

@@ -8,15 +8,34 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hwangseonu/paperless.dev/internal/common"
 	"github.com/hwangseonu/paperless.dev/internal/database"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
+type LoginCredentials struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// LoginHandler
+// @Summary		login
+// @Description	get tokens
+// @Tags	Auth
+// @Accept	json
+// @Produce	json
+// @Param	credentials body	LoginCredentials	true	"login credentials info"
+// @Success	200	{object}	LoginResponse
+// @Failure 400 {object}	schema.Error
+// @Failure 401 {object}	schema.Error
+// @Failure 404 {object}	schema.Error
+// @Failure 500 {object}	schema.Error
+// @Router	/auth/login [post]
 func LoginHandler(c *gin.Context) {
-	var credentials struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
+	var credentials LoginCredentials
 
 	if err := c.ShouldBindJSON(&credentials); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -26,11 +45,11 @@ func LoginHandler(c *gin.Context) {
 	user, err := database.NewUserRepository().FindByUsername(credentials.Username)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": common.ErrUserNotFound})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": common.ErrDatabase})
+		status := http.StatusInternalServerError
+		if errors.Is(err, common.ErrUserNotFound) {
+			status = http.StatusNotFound
 		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
