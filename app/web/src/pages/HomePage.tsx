@@ -1,16 +1,20 @@
 import { ArrowRight, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button.tsx'
+import { Badge } from '@/components/ui/badge.tsx'
 
 function HomePage() {
   return (
     <main>
       <section className="relative overflow-hidden pt-16 pb-24 lg:pt-32 lg:pb-40 bg-linear-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold mb-8 border border-indigo-100 animate-fade-in">
+          <Badge
+            variant={'outline'}
+            className="gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 text-sm font-semibold mb-8 border"
+          >
             <Zap size={16} />
             <span>3분 만에 완성하는 전문 이력서</span>
-          </div>
+          </Badge>
           <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 tracking-tight mb-8">
             당신의 커리어를 <br />
             <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-600 to-purple-600">
