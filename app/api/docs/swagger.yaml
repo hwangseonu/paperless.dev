@@ -247,7 +247,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is an api server for Paperless.dev
+  description: This is an api api for Paperless.dev
   license:
     name: MIT
     url: https://raw.githubusercontent.com/hwangseonu/paperless.dev/refs/heads/main/LICENSE

@@ -1008,7 +1008,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Paperless.dev API",
-	Description:      "This is an api server for Paperless.dev",
+	Description:      "This is an api api for Paperless.dev",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

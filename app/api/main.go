@@ -16,7 +16,7 @@ import (
 
 // @title           Paperless.dev API
 // @version         1.0
-// @description     This is an api server for Paperless.dev
+// @description     This is an api api for Paperless.dev
 
 // @license.name  MIT
 // @license.url  https://raw.githubusercontent.com/hwangseonu/paperless.dev/refs/heads/main/LICENSE
