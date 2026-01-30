@@ -1,9 +1,11 @@
 import './App.css'
+import Navigation from './components/Navigation.tsx'
 
 function App() {
   return (
     <>
-      <h1>Paperless.dev</h1>
+      <Navigation />
+      <main></main>
     </>
   )
 }
