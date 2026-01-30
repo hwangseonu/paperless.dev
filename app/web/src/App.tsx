@@ -4,7 +4,7 @@ import ResumePage from '@/pages/Resume.tsx'
 
 import { MOCK_RESUME_DATA as resume } from '@/assets/mock.ts'
 import HomePage from '@/pages/HomePage.tsx'
-import Layout from '@/components/Layout.tsx'
+import Layout from '@/components/common/Layout.tsx'
 
 const router = createBrowserRouter([
   {

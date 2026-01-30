@@ -1,17 +1,9 @@
 import { useLoaderData } from 'react-router-dom'
-import {
-  Award,
-  Briefcase,
-  Calendar,
-  Code,
-  ExternalLink,
-  Globe,
-  GraduationCap,
-  Mail,
-  MapPin,
-} from 'lucide-react'
-import ResumeSection from '@/components/ResumeSection.tsx'
+import { Award, Briefcase, Calendar, Code, ExternalLink, GraduationCap, MapPin } from 'lucide-react'
+import ResumeSection from '@/components/resume/ResumeSection.tsx'
 import type { Resume } from '@/utils/types.ts'
+import Information from '@/components/resume/Information.tsx'
+import Skills from '@/components/resume/Skills.tsx'
 
 function ResumePage() {
   const data: Resume = useLoaderData()
@@ -19,56 +11,17 @@ function ResumePage() {
   return (
     <main className="w-full mx-auto py-12 px-6 lg:px-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Left Sidebar - Bio & Info */}
         <aside className="lg:col-span-4 space-y-8 animate-fade-in-up">
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <div className="w-24 h-24 bg-slate-200 rounded-2xl mb-6 overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center text-slate-400 text-3xl font-bold bg-slate-100 uppercase">
-                {data.title.substring(0, 2)}
-              </div>
-            </div>
-            <h1 className="text-2xl font-extrabold text-slate-900 leading-tight mb-4">
-              {data.title}
-            </h1>
-            <p className="text-slate-600 text-sm leading-relaxed mb-6">{data.bio}</p>
-
-            <div className="space-y-3 pt-6 border-t border-slate-100">
-              <div className="flex items-center gap-3 text-sm text-slate-500">
-                <Mail size={16} />
-                <span>minjun.dev@example.com</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-slate-500">
-                <Globe size={16} />
-                <span className="text-indigo-600 hover:underline cursor-pointer">portfolio.me</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
-              핵심 보유 기술
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {data.skills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1.5 bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold border border-slate-100"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="p-8 rounded-2xl bg-indigo-600 text-white">
-            <h3 className="font-bold mb-2">업데이트 정보</h3>
-            <p className="text-indigo-100 text-xs">
-              최종 수정: {new Date(data.updatedAt).toLocaleDateString()}
-            </p>
-          </div>
+          <Information
+            title={data.title}
+            bio={data.bio}
+            email={data.email}
+            url={data.url}
+            image={data.image}
+          />
+          <Skills skills={data.skills} />
         </aside>
 
-        {/* Right Content - Sections */}
         <div
           className="lg:col-span-8 bg-white p-8 lg:p-12 rounded-2xl shadow-sm border border-slate-100 animate-fade-in-up"
           style={{ animationDelay: '100ms' }}

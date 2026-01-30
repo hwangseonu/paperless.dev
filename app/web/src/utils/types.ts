@@ -1,15 +1,10 @@
-/** * 이력서 데이터의 최상위 루트 인터페이스
- */
-export interface ResumeData {
-  resume: Resume
-}
-
-/** * 이력서 상세 정보
- */
 export interface Resume {
   id: string
   title: string
   bio: string
+  email: string
+  url: string
+  image: string
   public: boolean
   template: string
   skills: string[]
@@ -20,33 +15,27 @@ export interface Resume {
   projects: Project[]
 }
 
-/** * 학력 사항
- */
 export interface Education {
   id: string
   school: string
   major: string
   degree: string
-  startDate: string // YYYY-MM
+  startDate: string
   endDate: string
-  gpa?: string // 선택적 필드
+  gpa?: string
   activities?: string
 }
 
-/** * 경력 사항
- */
 export interface Experience {
   id: string
   company: string
   title: string
   location: string
   startDate: string
-  endDate: string // '현재' 또는 YYYY-MM
+  endDate: string
   description: string
 }
 
-/** * 프로젝트 경험
- */
 export interface Project {
   id: string
   title: string
