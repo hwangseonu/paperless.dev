@@ -3,13 +3,13 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 
 type props = {
   title: string
-  bio: string
+  description: string
   email: string
   url: string
   image: string
 }
 
-export function Information({ title, bio, email, url, image }: props) {
+export function Information({ title, description, email, url, image }: props) {
   return (
     <Card className="relative mx-auto w-full pt-0 overflow-hidden">
       <div className="absolute inset-0 z-30 aspect-video bg-black/35" />
@@ -20,7 +20,7 @@ export function Information({ title, bio, email, url, image }: props) {
       />
       <CardHeader>
         <CardTitle className={'text-2xl'}>{title}</CardTitle>
-        <CardDescription>{bio}</CardDescription>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardFooter className={'flex flex-col items-start gap-3 border-t mx-6'}>
         <div className="flex items-center gap-3 text-sm text-slate-500">

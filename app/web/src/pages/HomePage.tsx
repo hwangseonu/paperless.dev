@@ -1,5 +1,6 @@
 import { ArrowRight, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button.tsx'
 
 function HomePage() {
   return (
@@ -25,14 +26,14 @@ function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to={'/resume'}>
-              <button className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-indigo-200 flex items-center justify-center gap-2 group">
+              <Button className="font-bold text-lg p-8 has-[>svg]:px-8">
                 내 이력서 보기{' '}
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Button>
             </Link>
-            <button className="w-full sm:w-auto px-8 py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all">
+            <Button variant={'outline'} className="font-bold text-lg p-8 has-[>svg]:px-8">
               샘플 템플릿 탐색
-            </button>
+            </Button>
           </div>
         </div>
 

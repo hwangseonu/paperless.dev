@@ -16,7 +16,7 @@ function ResumePage() {
         <aside className="lg:col-span-4 space-y-8 animate-fade-in-up">
           <Information
             title={data.title}
-            bio={data.bio}
+            description={data.description}
             email={data.email}
             url={data.url}
             image={data.image}

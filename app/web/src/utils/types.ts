@@ -1,7 +1,7 @@
 export interface Resume {
   id: string
   title: string
-  bio: string
+  description: string
   email: string
   url: string
   image: string

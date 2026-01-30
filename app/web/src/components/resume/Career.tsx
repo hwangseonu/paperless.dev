@@ -16,7 +16,7 @@ function CareerItem(props: { experience: Experience }) {
           <h3 className="text-lg font-bold text-slate-900">{props.experience.title}</h3>
           <p className="text-indigo-600 font-medium text-sm">{props.experience.company}</p>
         </div>
-        <Badge variant={'secondary'} className={'text-slate-400'}>
+        <Badge variant={'secondary'}>
           <Calendar size={12} />
           {props.experience.startDate} - {props.experience.endDate}
         </Badge>

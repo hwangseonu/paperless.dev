@@ -1,10 +1,11 @@
 import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import ResumePage from '@/pages/Resume.tsx'
+import ResumePage from '@/pages/ResumePage.tsx'
 
 import { MOCK_RESUME_DATA as resume } from '@/assets/mock.ts'
 import HomePage from '@/pages/HomePage.tsx'
 import Layout from '@/components/common/Layout.tsx'
+import LoginPage from '@/pages/LoginPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -15,8 +16,11 @@ const router = createBrowserRouter([
       {
         path: 'resume',
         element: <ResumePage />,
-        // 여기서 데이터를 미리 가져올 수 있어요!
         loader: async () => resume.resume,
+      },
+      {
+        path: 'login',
+        element: <LoginPage />,
       },
     ],
   },

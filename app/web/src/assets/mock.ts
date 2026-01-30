@@ -2,7 +2,8 @@ export const MOCK_RESUME_DATA = {
   resume: {
     id: 'res-001',
     title: '만들면서 행복을 찾는 백엔드 개발자, 황선우',
-    bio: 'Kotlin과 Go를 주력으로 사용하는 5년 차 개발자입니다. 게임 전적 검색 서비스부터 지도 기반 소셜 앱까지 다양한 도메인에서 백엔드 시스템을 구축해 왔습니다. 단순히 기능 구현에 그치지 않고, 실시간 랭킹 시스템 설계나 데이터 시각화 등 기술을 통해 사용자 경험을 개선하는 과정에서 즐거움을 느낍니다.',
+    description:
+      'Kotlin과 Go를 주력으로 사용하는 5년 차 개발자입니다. 게임 전적 검색 서비스부터 지도 기반 소셜 앱까지 다양한 도메인에서 백엔드 시스템을 구축해 왔습니다. 단순히 기능 구현에 그치지 않고, 실시간 랭킹 시스템 설계나 데이터 시각화 등 기술을 통해 사용자 경험을 개선하는 과정에서 즐거움을 느낍니다.',
     email: 'hwangseonu12@naver.com',
     image: 'https://avatar.vercel.sh/shadcn1',
     url: 'https://blog.kinoshita.dev',
