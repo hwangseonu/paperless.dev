@@ -818,7 +818,7 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
-                "bio": {
+                "description": {
                     "type": "string"
                 },
                 "public": {
@@ -836,10 +836,10 @@ const docTemplate = `{
         "schema.ResumeResponseSchema": {
             "type": "object",
             "properties": {
-                "bio": {
+                "createdAt": {
                     "type": "string"
                 },
-                "createdAt": {
+                "description": {
                     "type": "string"
                 },
                 "educations": {
@@ -848,6 +848,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/schema.EducationResponseSchema"
                     }
                 },
+                "email": {
+                    "type": "string"
+                },
                 "experiences": {
                     "type": "array",
                     "items": {
@@ -855,6 +858,9 @@ const docTemplate = `{
                     }
                 },
                 "id": {
+                    "type": "string"
+                },
+                "image": {
                     "type": "string"
                 },
                 "projects": {
@@ -880,13 +886,16 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },
         "schema.ResumeUpdateSchema": {
             "type": "object",
             "properties": {
-                "bio": {
+                "description": {
                     "type": "string"
                 },
                 "educations": {
@@ -895,11 +904,17 @@ const docTemplate = `{
                         "$ref": "#/definitions/schema.EducationUpdateSchema"
                     }
                 },
+                "email": {
+                    "type": "string"
+                },
                 "experiences": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.ExperienceUpdateSchema"
                     }
+                },
+                "image": {
+                    "type": "string"
                 },
                 "projects": {
                     "type": "array",
@@ -920,6 +935,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -947,9 +965,6 @@ const docTemplate = `{
         "schema.UserResponseSchema": {
             "type": "object",
             "properties": {
-                "bio": {
-                    "type": "string"
-                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -957,12 +972,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profileImageURL": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -976,13 +985,7 @@ const docTemplate = `{
         "schema.UserUpdateSchema": {
             "type": "object",
             "properties": {
-                "bio": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 },
                 "username": {

@@ -47,7 +47,10 @@ type Resume struct {
 	ID          bson.ObjectID `bson:"_id,omitempty"`
 	OwnerID     bson.ObjectID `bson:"ownerID"`
 	Title       string        `bson:"title"`
-	Bio         string        `bson:"bio,omitempty"`
+	Description string        `bson:"description,omitempty"`
+	Email       string        `bson:"email,omitempty"`
+	URL         string        `bson:"url,omitempty"`
+	Image       string        `bson:"image,omitempty"`
 	Public      bool          `bson:"public"`
 	Template    string        `bson:"template,omitempty"`
 	Skills      []string      `bson:"skills,omitempty"`
@@ -62,7 +65,10 @@ func (resume *Resume) ResponseSchema() *schema.ResumeResponseSchema {
 	s := &schema.ResumeResponseSchema{}
 	s.ID = resume.ID.Hex()
 	s.Title = resume.Title
-	s.Bio = resume.Bio
+	s.Description = resume.Description
+	s.Email = resume.Email
+	s.URL = resume.URL
+	s.Image = resume.Image
 	s.Public = resume.Public
 	s.Template = resume.Template
 	s.Skills = resume.Skills
@@ -138,13 +144,13 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 	}
 
 	doc := Resume{
-		OwnerID:   userID,
-		Title:     schema.Title,
-		Bio:       schema.Bio,
-		Public:    schema.Public,
-		Template:  schema.Template,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		OwnerID:     userID,
+		Title:       schema.Title,
+		Description: schema.Description,
+		Public:      schema.Public,
+		Template:    schema.Template,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
@@ -202,8 +208,17 @@ func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpd
 	if updateSchema.Title != nil {
 		updateFields["title"] = *updateSchema.Title
 	}
-	if updateSchema.Bio != nil {
-		updateFields["bio"] = *updateSchema.Bio
+	if updateSchema.Description != nil {
+		updateFields["description"] = *updateSchema.Description
+	}
+	if updateSchema.Image != nil {
+		updateFields["image"] = *updateSchema.Image
+	}
+	if updateSchema.Email != nil {
+		updateFields["email"] = *updateSchema.Email
+	}
+	if updateSchema.URL != nil {
+		updateFields["url"] = *updateSchema.URL
 	}
 	if updateSchema.Public != nil {
 		updateFields["public"] = *updateSchema.Public

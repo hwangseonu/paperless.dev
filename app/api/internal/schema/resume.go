@@ -5,11 +5,11 @@ import (
 )
 
 type ResumeCreateSchema struct {
-	Title    string `json:"title" binding:"required,min=1"`
-	Bio      string `json:"bio,omitempty"`
-	Public   bool   `json:"public,omitempty"`
-	Template string `json:"template,omitempty"`
-	OwnerID  string `json:"-"`
+	Title       string `json:"title" binding:"required,min=1"`
+	Description string `json:"description,omitempty"`
+	Public      bool   `json:"public,omitempty"`
+	Template    string `json:"template,omitempty"`
+	OwnerID     string `json:"-"`
 }
 
 type ExperienceResponseSchema struct {
@@ -46,7 +46,10 @@ type ProjectResponseSchema struct {
 type ResumeResponseSchema struct {
 	ID          string                     `json:"id"`
 	Title       string                     `json:"title"`
-	Bio         string                     `json:"bio,omitempty"`
+	Description string                     `json:"description"`
+	Image       string                     `json:"image,omitempty"`
+	Email       string                     `json:"email,omitempty"`
+	URL         string                     `json:"url,omitempty"`
 	Public      bool                       `json:"public"`
 	Template    string                     `json:"template,omitempty"`
 	Skills      []string                   `json:"skills,omitempty"`
@@ -87,7 +90,10 @@ type ProjectUpdateSchema struct {
 
 type ResumeUpdateSchema struct {
 	Title       *string                   `json:"title,omitempty"`
-	Bio         *string                   `json:"bio,omitempty"`
+	Description *string                   `json:"description,omitempty"`
+	Email       *string                   `json:"email,omitempty"`
+	URL         *string                   `json:"url,omitempty"`
+	Image       *string                   `json:"image,omitempty"`
 	Public      *bool                     `json:"public,omitempty"`
 	Template    *string                   `json:"template,omitempty"`
 	Skills      *[]string                 `json:"skills,omitempty"`

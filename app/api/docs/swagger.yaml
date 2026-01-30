@@ -129,7 +129,7 @@ definitions:
     type: object
   schema.ResumeCreateSchema:
     properties:
-      bio:
+      description:
         type: string
       public:
         type: boolean
@@ -143,19 +143,23 @@ definitions:
     type: object
   schema.ResumeResponseSchema:
     properties:
-      bio:
-        type: string
       createdAt:
+        type: string
+      description:
         type: string
       educations:
         items:
           $ref: '#/definitions/schema.EducationResponseSchema'
         type: array
+      email:
+        type: string
       experiences:
         items:
           $ref: '#/definitions/schema.ExperienceResponseSchema'
         type: array
       id:
+        type: string
+      image:
         type: string
       projects:
         items:
@@ -173,19 +177,25 @@ definitions:
         type: string
       updatedAt:
         type: string
+      url:
+        type: string
     type: object
   schema.ResumeUpdateSchema:
     properties:
-      bio:
+      description:
         type: string
       educations:
         items:
           $ref: '#/definitions/schema.EducationUpdateSchema'
         type: array
+      email:
+        type: string
       experiences:
         items:
           $ref: '#/definitions/schema.ExperienceUpdateSchema'
         type: array
+      image:
+        type: string
       projects:
         items:
           $ref: '#/definitions/schema.ProjectUpdateSchema'
@@ -199,6 +209,8 @@ definitions:
       template:
         type: string
       title:
+        type: string
+      url:
         type: string
     type: object
   schema.UserCreateSchema:
@@ -217,17 +229,11 @@ definitions:
     type: object
   schema.UserResponseSchema:
     properties:
-      bio:
-        type: string
       createdAt:
         type: string
       email:
         type: string
       id:
-        type: string
-      name:
-        type: string
-      profileImageURL:
         type: string
       updatedAt:
         type: string
@@ -236,11 +242,7 @@ definitions:
     type: object
   schema.UserUpdateSchema:
     properties:
-      bio:
-        type: string
       email:
-        type: string
-      name:
         type: string
       username:
         type: string

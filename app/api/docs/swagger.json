@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is an api server for Paperless.dev",
+        "description": "This is an api api for Paperless.dev",
         "title": "Paperless.dev API",
         "contact": {},
         "license": {
@@ -810,7 +810,7 @@
                 "title"
             ],
             "properties": {
-                "bio": {
+                "description": {
                     "type": "string"
                 },
                 "public": {
@@ -828,10 +828,10 @@
         "schema.ResumeResponseSchema": {
             "type": "object",
             "properties": {
-                "bio": {
+                "createdAt": {
                     "type": "string"
                 },
-                "createdAt": {
+                "description": {
                     "type": "string"
                 },
                 "educations": {
@@ -840,6 +840,9 @@
                         "$ref": "#/definitions/schema.EducationResponseSchema"
                     }
                 },
+                "email": {
+                    "type": "string"
+                },
                 "experiences": {
                     "type": "array",
                     "items": {
@@ -847,6 +850,9 @@
                     }
                 },
                 "id": {
+                    "type": "string"
+                },
+                "image": {
                     "type": "string"
                 },
                 "projects": {
@@ -872,13 +878,16 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },
         "schema.ResumeUpdateSchema": {
             "type": "object",
             "properties": {
-                "bio": {
+                "description": {
                     "type": "string"
                 },
                 "educations": {
@@ -887,11 +896,17 @@
                         "$ref": "#/definitions/schema.EducationUpdateSchema"
                     }
                 },
+                "email": {
+                    "type": "string"
+                },
                 "experiences": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/schema.ExperienceUpdateSchema"
                     }
+                },
+                "image": {
+                    "type": "string"
                 },
                 "projects": {
                     "type": "array",
@@ -912,6 +927,9 @@
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -939,9 +957,6 @@
         "schema.UserResponseSchema": {
             "type": "object",
             "properties": {
-                "bio": {
-                    "type": "string"
-                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -949,12 +964,6 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "profileImageURL": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -968,13 +977,7 @@
         "schema.UserUpdateSchema": {
             "type": "object",
             "properties": {
-                "bio": {
-                    "type": "string"
-                },
                 "email": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 },
                 "username": {

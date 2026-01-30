@@ -19,13 +19,9 @@ type User struct {
 	Password        string        `bson:"password,omitempty"`
 	Provider        string        `bson:"provider"`
 	IsEmailVerified bool          `bson:"isEmailVerified,omitempty"`
-	Name            string        `bson:"name,omitempty"`
-	Bio             string        `bson:"bio,omitempty"`
-	ProfileImageURL string        `bson:"profileImageURL,omitempty"`
-
-	CreatedAt time.Time `bson:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt"`
-	LastLogin time.Time `bson:"lastLogin,omitempty"`
+	CreatedAt       time.Time     `bson:"createdAt"`
+	UpdatedAt       time.Time     `bson:"updatedAt"`
+	LastLogin       time.Time     `bson:"lastLogin,omitempty"`
 }
 
 func (user *User) ResponseSchema() *schema.UserResponseSchema {
@@ -33,9 +29,6 @@ func (user *User) ResponseSchema() *schema.UserResponseSchema {
 	s.ID = user.ID.Hex()
 	s.Username = user.Username
 	s.Email = user.Email
-	s.Name = user.Name
-	s.Bio = user.Bio
-	s.ProfileImageURL = user.ProfileImageURL
 	s.CreatedAt = user.CreatedAt
 	s.UpdatedAt = user.UpdatedAt
 	return s
@@ -140,12 +133,6 @@ func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema)
 	}
 	if schema.Email != nil {
 		updateFields["Email"] = *schema.Email
-	}
-	if schema.Name != nil {
-		updateFields["Name"] = *schema.Name
-	}
-	if schema.Bio != nil {
-		updateFields["Bio"] = *schema.Bio
 	}
 
 	updateFields["updatedAt"] = time.Now()
