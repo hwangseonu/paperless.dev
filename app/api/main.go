@@ -49,6 +49,7 @@ func main() {
 	authGroup := engine.Group("/api/v1/auth")
 	{
 		authGroup.POST("/login", auth.LoginHandler)
+		authGroup.POST("/refresh", auth.RefreshHandler)
 	}
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

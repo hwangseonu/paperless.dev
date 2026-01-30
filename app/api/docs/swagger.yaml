@@ -6,7 +6,7 @@ definitions:
       username:
         type: string
     type: object
-  auth.LoginResponse:
+  auth.TokenResponse:
     properties:
       access_token:
         type: string
@@ -274,7 +274,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.LoginResponse'
+            $ref: '#/definitions/auth.TokenResponse'
         "400":
           description: Bad Request
           schema:
@@ -292,6 +292,35 @@ paths:
           schema:
             $ref: '#/definitions/schema.Error'
       summary: login
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: get new access and refresh tokens using refresh token
+      parameters:
+      - description: Bearer {refresh_token}
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: refresh tokens
       tags:
       - Auth
   /resumes:

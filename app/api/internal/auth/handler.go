@@ -16,7 +16,7 @@ type LoginCredentials struct {
 	Password string `json:"password"`
 }
 
-type LoginResponse struct {
+type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -28,7 +28,7 @@ type LoginResponse struct {
 // @Accept	json
 // @Produce	json
 // @Param	credentials body	LoginCredentials	true	"login credentials info"
-// @Success	200	{object}	LoginResponse
+// @Success	200	{object}	TokenResponse
 // @Failure 400 {object}	schema.Error
 // @Failure 401 {object}	schema.Error
 // @Failure 404 {object}	schema.Error
@@ -69,8 +69,57 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"access_token":  access,
-		"refresh_token": refresh,
+	c.JSON(http.StatusOK, TokenResponse{
+		AccessToken:  access,
+		RefreshToken: refresh,
+	})
+}
+
+// RefreshHandler
+// @Summary    refresh tokens
+// @Description get new access and refresh tokens using refresh token
+// @Tags    Auth
+// @Accept  json
+// @Produce json
+// @Param   Authorization header string true "Bearer {refresh_token}"
+// @Success 200    {object}   TokenResponse
+// @Failure 401 {object}    schema.Error
+// @Failure 500 {object}    schema.Error
+// @Router  /auth/refresh [post]
+func RefreshHandler(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		return
+	}
+
+	tokenString := authHeader
+	if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+		tokenString = authHeader[7:]
+	}
+
+	claims, err := ParseToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		return
+	}
+
+	if claims.Subject != "refresh" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		return
+	}
+
+	access, err1 := GenerateToken(claims.UserID, "access")
+	refresh, err2 := GenerateToken(claims.UserID, "refresh")
+
+	if err1 != nil || err2 != nil {
+		log.Println("an error occurred while generating tokens during refresh:", errors.Join(err1, err2))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": common.ErrInvalidToken})
+		return
+	}
+
+	c.JSON(http.StatusOK, TokenResponse{
+		AccessToken:  access,
+		RefreshToken: refresh,
 	})
 }
