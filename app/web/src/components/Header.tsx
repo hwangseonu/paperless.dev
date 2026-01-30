@@ -1,9 +1,9 @@
 import logo from '../assets/logo.svg'
 import { Button } from '@/components/ui/button.tsx'
 
-function Navigation() {
+function Header() {
   return (
-    <nav
+    <header
       className={
         'sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center'
       }
@@ -13,17 +13,17 @@ function Navigation() {
           src={logo}
           alt={'logo'}
           className={
-            'w-9 h-9  rounded-xl flex items-center justify-center text-white font-bold group-hover:rotate-6 transition-transform'
+            'w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold group-hover:rotate-6 transition-transform'
           }
         />
-        <span className={'font-extrabold text-xl tracking-tighter'}>RESUME.SERVICE</span>
+        <span className={'font-extrabold text-xl tracking-tighter'}>PAPERLESS.DEV</span>
       </div>
 
       <div>
         <Button>로그인</Button>
       </div>
-    </nav>
+    </header>
   )
 }
 
-export default Navigation
+export default Header

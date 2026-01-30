@@ -1,4 +1,3 @@
-# 1단계: 빌드 단계
 FROM node:25-slim AS build
 
 WORKDIR /app
