@@ -1,6 +1,6 @@
 import ResumeSection from '@/components/resume/ResumeSection.tsx'
 import { Award, GraduationCap } from 'lucide-react'
-import type { Education } from '@/utils/types.ts'
+import type { Education } from '@/lib/types.ts'
 import { Badge } from '@/components/ui/badge.tsx'
 
 type props = {

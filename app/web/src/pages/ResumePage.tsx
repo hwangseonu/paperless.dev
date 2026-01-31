@@ -1,5 +1,5 @@
 import { useLoaderData } from 'react-router-dom'
-import type { Resume } from '@/utils/types.ts'
+import type { Resume } from '@/lib/types.ts'
 import Information from '@/components/resume/Information.tsx'
 import Skills from '@/components/resume/Skills.tsx'
 import Career from '@/components/resume/Career.tsx'

@@ -1,6 +1,6 @@
 import { Code, ExternalLink } from 'lucide-react'
 import ResumeSection from '@/components/resume/ResumeSection.tsx'
-import type { Project } from '@/utils/types.ts'
+import type { Project } from '@/lib/types.ts'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card.tsx'
 import { Badge } from '@/components/ui/badge.tsx'
 

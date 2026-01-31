@@ -1,6 +1,6 @@
 import { Briefcase, Calendar, MapPin } from 'lucide-react'
 import ResumeSection from '@/components/resume/ResumeSection.tsx'
-import type { Experience } from '@/utils/types.ts'
+import type { Experience } from '@/lib/types.ts'
 import { Badge } from '@/components/ui/badge.tsx'
 
 type props = {
