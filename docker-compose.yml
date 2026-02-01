@@ -7,7 +7,12 @@ services:
       - "8080:8080"
     environment:
       - MONGO_URI=mongodb://${DB_USER}:${DB_PASSWORD}@db:27017/?authSource=admin
+      - REDIS_ADDR=redis:6379
       - JWT_SECRET=${JWT_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    depends_on:
+      - redis
+      - db
     networks:
       - paperless-network
 
@@ -25,13 +30,21 @@ services:
       - paperless-network
 
   db:
-    image: mongo:latest
+    image: mongo:8.2.4
     container_name: mongodb
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${DB_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${DB_PASSWORD}
+    networks:
+      - paperless-network
+
+  redis:
+    image: redis:8.4.0-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
     networks:
       - paperless-network
 

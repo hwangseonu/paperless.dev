@@ -9,6 +9,7 @@ import (
 	"github.com/hwangseonu/paperless.dev/docs"
 	"github.com/hwangseonu/paperless.dev/internal/auth"
 	"github.com/hwangseonu/paperless.dev/internal/common"
+	"github.com/hwangseonu/paperless.dev/internal/database"
 	"github.com/hwangseonu/paperless.dev/internal/resource"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -37,13 +38,20 @@ func main() {
 	engine.Use(protector.Middleware())
 	engine.Use(common.ErrorHandler)
 
+	userRepo := database.NewUserRepository()
+
 	api := restful.NewAPI("/api/v1")
 	{
-		user := resource.NewUser()
+		user := resource.NewUser(userRepo)
 		resume := resource.NewResume()
 		api.RegisterResource("/users", user)
 		api.RegisterResource("/resumes", resume)
 		api.RegisterHandlers(&engine.RouterGroup)
+	}
+
+	apiGroup := engine.Group("/api/v1")
+	{
+		apiGroup.POST("/users/register", resource.CreateTempUserHandler(userRepo))
 	}
 
 	authGroup := engine.Group("/api/v1/auth")

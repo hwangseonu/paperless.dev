@@ -9,25 +9,28 @@ import (
 	"github.com/hwangseonu/paperless.dev/internal/auth"
 	"github.com/hwangseonu/paperless.dev/internal/common"
 	"github.com/hwangseonu/paperless.dev/internal/database"
+	"github.com/hwangseonu/paperless.dev/internal/redis"
 	"github.com/hwangseonu/paperless.dev/internal/schema"
-	"golang.org/x/crypto/bcrypt"
+	redis2 "github.com/redis/go-redis/v9"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
+
+const verifyCodeLength = 6
 
 type User struct {
 	restful.Resource
 	repository database.UserRepository
 }
 
-func NewUser() *User {
+func NewUser(userRepo database.UserRepository) *User {
 	user := new(User)
-	user.repository = database.NewUserRepository()
+	user.repository = userRepo
 	return user
 }
 
 func (resource *User) RequestBody(method string) interface{} {
 	switch method {
-	case http.MethodPost:
-		return new(schema.UserCreateSchema)
 	case http.MethodPut, http.MethodPatch:
 		return new(schema.UserUpdateSchema)
 	default:
@@ -39,38 +42,46 @@ func (resource *User) RequestBody(method string) interface{} {
 // @Summary		create new user
 // @Description	create new user
 // @Tags	User
-// @Accept	json
 // @Produce	json
-// @Param	user body	schema.UserCreateSchema	true	"initial values of user"
-// @Success	201	{object}	object{user=schema.UserResponseSchema}
+// @Param	code	query	string	true	"verify code"
+// @Success	204	{object}	object{user=schema.UserResponseSchema}
 // @Failure 400 {object}	schema.Error
 // @Failure 409 {object}	schema.Error
 // @Failure 500 {object}	schema.Error
 // @Router	/users [post]
-func (resource *User) Create(body interface{}, _ *gin.Context) (gin.H, int, error) {
-	user := body.(*schema.UserCreateSchema)
+func (resource *User) Create(_ interface{}, c *gin.Context) (gin.H, int, error) {
+	code := c.Query("code")
 
-	if doc, err := resource.repository.FindByUsernameOrEmail(user.Username, user.Email); err != nil && !errors.Is(err, common.ErrUserNotFound) {
-		return nil, http.StatusInternalServerError, common.ErrDatabase
-	} else if doc != nil {
+	tmp, err := redis.GetTempUser(code)
+	if errors.Is(err, redis2.Nil) {
+		return nil, http.StatusBadRequest, common.ErrInvalidVerifyCode
+	} else if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	doc, err := resource.repository.FindByEmail(tmp.Email)
+	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, http.StatusInternalServerError, common.ErrInternal
+		}
+	}
+
+	if doc != nil {
 		return nil, http.StatusConflict, common.ErrUserConflict
 	}
 
-	var password []byte
-	password, _ = bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	user.Password = string(password)
-
-	result, err := resource.repository.Create(user)
+	result, err := resource.repository.Create(&schema.UserCreateSchema{
+		Nickname: tmp.Nickname,
+		Email:    tmp.Email,
+		Password: tmp.Password,
+	})
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
-	return gin.H{
-		"id":       result.ID,
-		"username": user.Username,
-		"email":    user.Email,
-	}, http.StatusCreated, nil
+	user := result.ResponseSchema()
+	return gin.H{"user": user}, http.StatusCreated, nil
 }
 
 // Read *User.Read
@@ -89,7 +100,13 @@ func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		credentials := auth.MustGetUserCredentials(c)
 		userID := credentials.UserID
-		user, err := resource.repository.FindByID(userID)
+
+		objectID, err := bson.ObjectIDFromHex(userID)
+		if err != nil {
+			return nil, http.StatusBadRequest, common.ErrInvalidInput
+		}
+
+		user, err := resource.repository.FindByID(objectID)
 
 		if err != nil {
 			return nil, http.StatusNotFound, common.ErrUserNotFound
@@ -98,7 +115,7 @@ func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 		return gin.H{"user": user.ResponseSchema()}, http.StatusOK, nil
 	}
 
-	return nil, http.StatusOK, nil
+	return nil, http.StatusForbidden, nil
 }
 
 func (resource *User) ReadAll(_ *gin.Context) (gin.H, int, error) {
@@ -131,14 +148,18 @@ func (resource *User) Update(id string, body interface{}, c *gin.Context) (gin.H
 	}
 
 	targetID := credentials.UserID
-	updateSchema := body.(*schema.UserUpdateSchema)
+	objectID, err := bson.ObjectIDFromHex(targetID)
+	if err != nil {
+		return nil, http.StatusBadRequest, common.ErrInvalidInput
+	}
 
-	updatedUser, err := resource.repository.Update(targetID, updateSchema)
+	updateSchema := body.(*schema.UserUpdateSchema)
+	updatedUser, err := resource.repository.Update(objectID, updateSchema)
 	if err != nil {
 		if errors.Is(err, common.ErrUserNotFound) {
 			return nil, http.StatusNotFound, common.ErrUserNotFound
 		}
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
 	return gin.H{
@@ -169,9 +190,13 @@ func (resource *User) Delete(id string, c *gin.Context) (gin.H, int, error) {
 		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
-	err := resource.repository.DeleteByID(targetID)
+	objectID, err := bson.ObjectIDFromHex(targetID)
 	if err != nil {
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusBadRequest, common.ErrInvalidInput
+	}
+	_, err = resource.repository.DeleteByID(objectID)
+	if err != nil {
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
 	return nil, http.StatusNoContent, nil

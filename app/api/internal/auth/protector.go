@@ -64,7 +64,6 @@ func Authorize(c *gin.Context) (*UserCredentials, error) {
 
 	return &UserCredentials{
 		UserID: claims.UserID,
-		Roles:  claims.Roles,
 	}, nil
 
 }

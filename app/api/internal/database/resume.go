@@ -2,10 +2,8 @@ package database
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"github.com/hwangseonu/paperless.dev/internal/common"
 	"github.com/hwangseonu/paperless.dev/internal/schema"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -48,7 +46,7 @@ type Resume struct {
 	OwnerID     bson.ObjectID `bson:"ownerID"`
 	Title       string        `bson:"title"`
 	Description string        `bson:"description,omitempty"`
-	Email       string        `bson:"email,omitempty"`
+	Email       string        `bson:"mail,omitempty"`
 	URL         string        `bson:"url,omitempty"`
 	Image       string        `bson:"image,omitempty"`
 	Public      bool          `bson:"public"`
@@ -120,10 +118,10 @@ func (resume *Resume) ResponseSchema() *schema.ResumeResponseSchema {
 
 type ResumeRepository interface {
 	Create(schema *schema.ResumeCreateSchema) (*Resume, error)
-	FindByID(id string) (*Resume, error)
-	FindManyByOwnerID(ownerID string) ([]Resume, error)
-	Update(id string, schema *schema.ResumeUpdateSchema) (*Resume, error)
-	DeleteByID(id string) error
+	FindByID(id bson.ObjectID) (*Resume, error)
+	FindManyByOwnerID(ownerID bson.ObjectID) ([]Resume, error)
+	Update(id bson.ObjectID, schema *schema.ResumeUpdateSchema) (*Resume, error)
+	DeleteByID(id bson.ObjectID) (int64, error)
 }
 
 type MongoResumeRepository struct {
@@ -140,7 +138,7 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 	userID, err := bson.ObjectIDFromHex(schema.OwnerID)
 
 	if err != nil {
-		return nil, common.ErrInvalidUserID
+		return nil, err
 	}
 
 	doc := Resume{
@@ -152,126 +150,104 @@ func (r *MongoResumeRepository) Create(schema *schema.ResumeCreateSchema) (*Resu
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	result, err := r.collection.InsertOne(context.Background(), doc)
+
+	ctx := context.Background()
+	result, err := r.collection.InsertOne(ctx, doc)
 	if err != nil {
-		return nil, common.ErrDatabase
+		return nil, err
 	}
 	doc.ID = result.InsertedID.(bson.ObjectID)
 	return &doc, nil
 }
 
-func (r *MongoResumeRepository) FindByID(id string) (*Resume, error) {
-	objID, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, common.ErrInvalidResumeID
+func (r *MongoResumeRepository) FindByID(id bson.ObjectID) (*Resume, error) {
+	ctx := context.Background()
+	filter := bson.M{"_id": id}
+
+	var doc Resume
+
+	if err := r.collection.FindOne(ctx, filter).Decode(&doc); err != nil {
+		return nil, err
 	}
 
-	doc := new(Resume)
-	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(doc)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, common.ErrResumeNotFound
-		}
-		return nil, common.ErrDatabase
-	}
-	return doc, nil
+	return &doc, nil
 }
 
-func (r *MongoResumeRepository) FindManyByOwnerID(ownerID string) ([]Resume, error) {
-	ownerObjID, err := bson.ObjectIDFromHex(ownerID)
+func (r *MongoResumeRepository) FindManyByOwnerID(ownerID bson.ObjectID) ([]Resume, error) {
+	ctx := context.Background()
+	filter := bson.M{"ownerID": ownerID}
+	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
-		return nil, common.ErrInvalidUserID
-	}
-	filter := bson.M{"ownerID": ownerObjID}
-
-	cursor, err := r.collection.Find(context.Background(), filter)
-	if err != nil {
-		return nil, common.ErrDatabase
+		return nil, err
 	}
 
 	var result []Resume
-	if err = cursor.All(context.Background(), &result); err != nil {
-		return nil, common.ErrDatabase
+	if err = cursor.All(ctx, &result); err != nil {
+		return nil, err
 	}
 
 	return result, nil
 }
 
-func (r *MongoResumeRepository) Update(id string, updateSchema *schema.ResumeUpdateSchema) (*Resume, error) {
-	objID, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, common.ErrInvalidResumeID
-	}
-
-	updateFields := bson.M{}
+func (r *MongoResumeRepository) Update(id bson.ObjectID, updateSchema *schema.ResumeUpdateSchema) (*Resume, error) {
+	fields := bson.M{}
 
 	if updateSchema.Title != nil {
-		updateFields["title"] = *updateSchema.Title
+		fields["title"] = *updateSchema.Title
 	}
 	if updateSchema.Description != nil {
-		updateFields["description"] = *updateSchema.Description
+		fields["description"] = *updateSchema.Description
 	}
 	if updateSchema.Image != nil {
-		updateFields["image"] = *updateSchema.Image
+		fields["image"] = *updateSchema.Image
 	}
 	if updateSchema.Email != nil {
-		updateFields["email"] = *updateSchema.Email
+		fields["email"] = *updateSchema.Email
 	}
 	if updateSchema.URL != nil {
-		updateFields["url"] = *updateSchema.URL
+		fields["url"] = *updateSchema.URL
 	}
 	if updateSchema.Public != nil {
-		updateFields["public"] = *updateSchema.Public
+		fields["public"] = *updateSchema.Public
 	}
 	if updateSchema.Template != nil {
-		updateFields["template"] = *updateSchema.Template
+		fields["template"] = *updateSchema.Template
 	}
 	if updateSchema.Skills != nil {
-		updateFields["skills"] = *updateSchema.Skills
+		fields["skills"] = *updateSchema.Skills
 	}
 	if updateSchema.Experiences != nil {
-		updateFields["experiences"] = *updateSchema.Experiences
+		fields["experiences"] = *updateSchema.Experiences
 	}
 	if updateSchema.Educations != nil {
-		updateFields["educations"] = *updateSchema.Educations
+		fields["educations"] = *updateSchema.Educations
 	}
 	if updateSchema.Projects != nil {
-		updateFields["projects"] = *updateSchema.Projects
+		fields["projects"] = *updateSchema.Projects
 	}
 
-	updateFields["updatedAt"] = time.Now()
+	fields["updatedAt"] = time.Now()
 
-	filter := bson.M{"_id": objID}
-	update := bson.M{"$set": updateFields}
+	ctx := context.Background()
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": fields}
 	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	var updatedResume Resume
+	var resume Resume
 
-	err = r.collection.FindOneAndUpdate(context.Background(), filter, update, opt).Decode(&updatedResume)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, common.ErrResumeNotFound
-		}
-		return nil, common.ErrDatabase
+	if err := r.collection.FindOneAndUpdate(ctx, filter, update, opt).Decode(&resume); err != nil {
+		return nil, err
 	}
 
-	return &updatedResume, nil
+	return &resume, nil
 }
 
-func (r *MongoResumeRepository) DeleteByID(id string) error {
-	objID, err := bson.ObjectIDFromHex(id)
+func (r *MongoResumeRepository) DeleteByID(id bson.ObjectID) (int64, error) {
+	ctx := context.Background()
+	filter := bson.M{"_id": id}
+	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		return common.ErrInvalidResumeID
+		return 0, err
 	}
-
-	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
-	if err != nil {
-		return common.ErrDatabase
-	}
-
-	if result.DeletedCount == 0 {
-		return common.ErrResumeNotFound
-	}
-
-	return nil
+	return result.DeletedCount, nil
 }

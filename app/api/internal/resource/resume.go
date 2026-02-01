@@ -9,6 +9,8 @@ import (
 	"github.com/hwangseonu/paperless.dev/internal/common"
 	"github.com/hwangseonu/paperless.dev/internal/database"
 	"github.com/hwangseonu/paperless.dev/internal/schema"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type Resume struct {
@@ -55,10 +57,11 @@ func (resource *Resume) Create(body interface{}, c *gin.Context) (gin.H, int, er
 	resume, err := resource.repository.Create(createSchema)
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
-	return gin.H{"resume": resume.ResponseSchema()}, http.StatusCreated, nil
+	res := gin.H{"resume": resume.ResponseSchema()}
+	return res, http.StatusCreated, nil
 }
 
 // Read *Resume.Read
@@ -82,21 +85,24 @@ func (resource *Resume) Read(id string, c *gin.Context) (gin.H, int, error) {
 		userID = credentials.UserID
 	}
 
-	resume, err := resource.repository.FindByID(id)
-
+	objectID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if errors.Is(err, common.ErrResumeNotFound) {
-			status = http.StatusNotFound
+		return nil, http.StatusBadRequest, common.ErrInvalidInput
+	}
+
+	resume, err := resource.repository.FindByID(objectID)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, http.StatusNotFound, common.ErrResumeNotFound
 		}
-		return nil, status, err
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
-	if resume.Public || resume.OwnerID.Hex() == userID {
-		return gin.H{"resume": resume.ResponseSchema()}, http.StatusOK, nil
+	if !resume.Public && resume.OwnerID.Hex() != userID {
+		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
-	return nil, http.StatusForbidden, common.ErrAccessDenied
+	return gin.H{"resume": resume.ResponseSchema()}, http.StatusOK, nil
 }
 
 // ReadAll *Resume.ReadAll
@@ -126,7 +132,12 @@ func (resource *Resume) ReadAll(c *gin.Context) (gin.H, int, error) {
 		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
-	resumes, err := resource.repository.FindManyByOwnerID(targetOwner)
+	objectID, err := bson.ObjectIDFromHex(targetOwner)
+	if err != nil {
+		return nil, http.StatusBadRequest, common.ErrInvalidInput
+	}
+
+	resumes, err := resource.repository.FindManyByOwnerID(objectID)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -160,13 +171,18 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 
 	credentials := auth.MustGetUserCredentials(c)
 	userID := credentials.UserID
-	resumeDoc, err := resource.repository.FindByID(id)
+
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, http.StatusBadRequest, common.ErrInvalidInput
+	}
+	resumeDoc, err := resource.repository.FindByID(objectID)
 
 	if err != nil {
-		if errors.Is(err, common.ErrResumeNotFound) {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, http.StatusNotFound, common.ErrResumeNotFound
 		}
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
 	if resumeDoc.OwnerID.Hex() != userID {
@@ -174,10 +190,10 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 	}
 
 	updateBody := body.(*schema.ResumeUpdateSchema)
-	result, err := resource.repository.Update(id, updateBody)
+	result, err := resource.repository.Update(objectID, updateBody)
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
 	return gin.H{"resume": result.ResponseSchema()}, http.StatusOK, nil
@@ -199,22 +215,27 @@ func (resource *Resume) Update(id string, body interface{}, c *gin.Context) (gin
 func (resource *Resume) Delete(id string, c *gin.Context) (gin.H, int, error) {
 	credentials := auth.MustGetUserCredentials(c)
 	userID := credentials.UserID
-	resumeDoc, err := resource.repository.FindByID(id)
+
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, http.StatusBadRequest, common.ErrInvalidInput
+	}
+	resumeDoc, err := resource.repository.FindByID(objectID)
 
 	if err != nil {
-		if errors.Is(err, common.ErrResumeNotFound) {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, http.StatusNotFound, common.ErrResumeNotFound
 		}
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
 	if resumeDoc.OwnerID.Hex() != userID {
 		return nil, http.StatusForbidden, common.ErrAccessDenied
 	}
 
-	err = resource.repository.DeleteByID(id)
+	_, err = resource.repository.DeleteByID(resumeDoc.ID)
 	if err != nil {
-		return nil, http.StatusInternalServerError, common.ErrDatabase
+		return nil, http.StatusInternalServerError, common.ErrInternal
 	}
 
 	return nil, http.StatusNoContent, nil

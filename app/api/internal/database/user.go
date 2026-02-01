@@ -2,10 +2,8 @@ package database
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"github.com/hwangseonu/paperless.dev/internal/common"
 	"github.com/hwangseonu/paperless.dev/internal/schema"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -13,21 +11,18 @@ import (
 )
 
 type User struct {
-	ID              bson.ObjectID `bson:"_id,omitempty"`
-	Username        string        `bson:"username"`
-	Email           string        `bson:"email"`
-	Password        string        `bson:"password,omitempty"`
-	Provider        string        `bson:"provider"`
-	IsEmailVerified bool          `bson:"isEmailVerified,omitempty"`
-	CreatedAt       time.Time     `bson:"createdAt"`
-	UpdatedAt       time.Time     `bson:"updatedAt"`
-	LastLogin       time.Time     `bson:"lastLogin,omitempty"`
+	ID        bson.ObjectID `bson:"_id"`
+	Nickname  string        `bson:"nickname"`
+	Email     string        `bson:"email"`
+	Password  string        `bson:"password"`
+	CreatedAt time.Time     `bson:"createdAt"`
+	UpdatedAt time.Time     `bson:"updatedAt"`
 }
 
 func (user *User) ResponseSchema() *schema.UserResponseSchema {
 	s := new(schema.UserResponseSchema)
 	s.ID = user.ID.Hex()
-	s.Username = user.Username
+	s.Nickname = user.Nickname
 	s.Email = user.Email
 	s.CreatedAt = user.CreatedAt
 	s.UpdatedAt = user.UpdatedAt
@@ -36,11 +31,10 @@ func (user *User) ResponseSchema() *schema.UserResponseSchema {
 
 type UserRepository interface {
 	Create(schema *schema.UserCreateSchema) (*User, error)
-	FindByID(id string) (*User, error)
-	FindByUsername(username string) (*User, error)
-	FindByUsernameOrEmail(username, email string) (*User, error)
-	Update(id string, schema *schema.UserUpdateSchema) (*User, error)
-	DeleteByID(id string) error
+	FindByID(id bson.ObjectID) (*User, error)
+	FindByEmail(email string) (*User, error)
+	Update(id bson.ObjectID, schema *schema.UserUpdateSchema) (*User, error)
+	DeleteByID(id bson.ObjectID) (int64, error)
 }
 
 func NewUserRepository() UserRepository {
@@ -55,7 +49,7 @@ type MongoUserRepository struct {
 
 func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, error) {
 	doc := &User{
-		Username:  user.Username,
+		Nickname:  user.Nickname,
 		Password:  user.Password,
 		Email:     user.Email,
 		CreatedAt: time.Now(),
@@ -63,110 +57,63 @@ func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, erro
 
 	result, err := r.collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		return nil, common.ErrDatabase
+		return nil, err
 	}
 
 	doc.ID = result.InsertedID.(bson.ObjectID)
 	return doc, nil
 }
 
-func (r *MongoUserRepository) FindByID(id string) (*User, error) {
-	objID, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, common.ErrInvalidUserID
-	}
-
+func (r *MongoUserRepository) FindByID(id bson.ObjectID) (*User, error) {
 	var user User
-	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, common.ErrUserNotFound
-		}
-		return nil, common.ErrDatabase
-	}
 
+	ctx := context.Background()
+	filter := bson.M{"_id": id}
+	if err := r.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		return nil, err
+	}
 	return &user, nil
 }
 
-func (r *MongoUserRepository) FindByUsername(username string) (*User, error) {
+func (r *MongoUserRepository) FindByEmail(email string) (*User, error) {
 	var user User
-	err := r.collection.FindOne(context.Background(), bson.M{"username": username}).Decode(&user)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, common.ErrUserNotFound
-		}
-		return nil, common.ErrDatabase
-	}
 
+	ctx := context.Background()
+	filter := bson.M{"email": email}
+	if err := r.collection.FindOne(ctx, filter).Decode(&user); err != nil {
+		return nil, err
+	}
 	return &user, nil
 }
 
-func (r *MongoUserRepository) FindByUsernameOrEmail(username, email string) (*User, error) {
-	filter := bson.M{
-		"$or": []bson.M{
-			{"username": username},
-			{"email": email},
-		},
+func (r *MongoUserRepository) Update(id bson.ObjectID, schema *schema.UserUpdateSchema) (*User, error) {
+	fields := bson.M{}
+	if schema.Nickname != nil {
+		fields["Nickname"] = *schema.Nickname
 	}
+	fields["updatedAt"] = time.Now()
 
-	var user User
-	err := r.collection.FindOne(context.Background(), filter).Decode(&user)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, common.ErrUserNotFound
-		}
-		return nil, common.ErrDatabase
-	}
-
-	return &user, nil
-}
-
-func (r *MongoUserRepository) Update(id string, schema *schema.UserUpdateSchema) (*User, error) {
-	objID, err := bson.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, common.ErrInvalidUserID
-	}
-	updateFields := bson.M{}
-
-	if schema.Username != nil {
-		updateFields["Username"] = *schema.Username
-	}
-	if schema.Email != nil {
-		updateFields["Email"] = *schema.Email
-	}
-
-	updateFields["updatedAt"] = time.Now()
-
-	filter := bson.M{"_id": objID}
-	update := bson.M{"$set": updateFields}
+	ctx := context.Background()
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": fields}
 	opt := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	var updatedUser User
-	err = r.collection.FindOneAndUpdate(context.TODO(), filter, update, opt).Decode(&updatedUser)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, common.ErrUserNotFound
-		}
-		return nil, common.ErrDatabase
+	var user User
+	if err := r.collection.FindOneAndUpdate(ctx, filter, update, opt).Decode(&user); err != nil {
+		return nil, err
 	}
 
-	return &updatedUser, nil
+	return &user, nil
 }
 
-func (r *MongoUserRepository) DeleteByID(id string) error {
-	objID, err := bson.ObjectIDFromHex(id)
+func (r *MongoUserRepository) DeleteByID(id bson.ObjectID) (int64, error) {
+	ctx := context.Background()
+	filter := bson.M{"_id": id}
+
+	result, err := r.collection.DeleteOne(ctx, filter)
 	if err != nil {
-		return common.ErrInvalidUserID
-	}
+		return 0, err
 
-	result, err := r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
-	if err != nil {
-		return common.ErrDatabase
 	}
-
-	if result.DeletedCount == 0 {
-		return mongo.ErrNoDocuments // 또는 ErrUserNotFound
-	}
-
-	return nil
+	return result.DeletedCount, nil
 }

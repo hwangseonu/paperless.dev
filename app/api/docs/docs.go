@@ -423,9 +423,6 @@ const docTemplate = `{
         "/users": {
             "post": {
                 "description": "create new user",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -435,7 +432,59 @@ const docTemplate = `{
                 "summary": "create new user",
                 "parameters": [
                     {
-                        "description": "initial values of user",
+                        "type": "string",
+                        "description": "verify code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "user": {
+                                    "$ref": "#/definitions/schema.UserResponseSchema"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Error"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Error"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/schema.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/register": {
+            "post": {
+                "description": "Starts the sign-up process by creating a temporary user profile in the cache and dispatching a verification code to the provided email address.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Initiate user registration \u0026 send verification email",
+                "parameters": [
+                    {
+                        "description": "initial values of User",
                         "name": "user",
                         "in": "body",
                         "required": true,
@@ -446,15 +495,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "user": {
-                                    "$ref": "#/definitions/schema.UserResponseSchema"
-                                }
-                            }
-                        }
+                        "description": "Created"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -662,10 +703,10 @@ const docTemplate = `{
         "auth.LoginCredentials": {
             "type": "object",
             "properties": {
-                "password": {
+                "email": {
                     "type": "string"
                 },
-                "username": {
+                "password": {
                     "type": "string"
                 }
             }
@@ -990,19 +1031,19 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "password",
-                "username"
+                "nickname",
+                "password"
             ],
             "properties": {
                 "email": {
                     "type": "string"
                 },
+                "nickname": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string",
                     "minLength": 8
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },
@@ -1018,10 +1059,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "nickname": {
                     "type": "string"
                 },
-                "username": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -1029,10 +1070,7 @@ const docTemplate = `{
         "schema.UserUpdateSchema": {
             "type": "object",
             "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "username": {
+                "nickname": {
                     "type": "string"
                 }
             }

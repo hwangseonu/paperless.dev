@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -8,8 +9,7 @@ import (
 )
 
 type Claims struct {
-	UserID string   `json:"userid"`
-	Roles  []string `json:"roles"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
@@ -29,7 +29,6 @@ func GenerateToken(userID string, subject string) (string, error) {
 
 	claims := Claims{
 		UserID: userID,
-		Roles:  []string{"user"},
 		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  jwt.ClaimStrings{"paperless.dev"},
 			ExpiresAt: duration,
@@ -52,12 +51,16 @@ func ParseToken(tokenString string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, ErrTokenExpired
+		}
+		return nil, ErrTokenInvalid
 	}
 
-	if !token.Valid {
-		return nil, common.ErrInvalidToken
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, ErrTokenInvalid
 	}
 
-	return token.Claims.(*Claims), err
+	return claims, nil
 }

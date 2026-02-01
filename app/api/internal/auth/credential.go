@@ -6,7 +6,6 @@ import (
 
 type UserCredentials struct {
 	UserID string
-	Roles  []string
 }
 
 func GetUserCredentials(c *gin.Context) *UserCredentials {

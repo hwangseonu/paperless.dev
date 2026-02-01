@@ -1,9 +1,9 @@
 definitions:
   auth.LoginCredentials:
     properties:
-      password:
+      email:
         type: string
-      username:
+      password:
         type: string
     type: object
   auth.TokenResponse:
@@ -217,15 +217,15 @@ definitions:
     properties:
       email:
         type: string
+      nickname:
+        type: string
       password:
         minLength: 8
         type: string
-      username:
-        type: string
     required:
     - email
+    - nickname
     - password
-    - username
     type: object
   schema.UserResponseSchema:
     properties:
@@ -235,16 +235,14 @@ definitions:
         type: string
       id:
         type: string
-      updatedAt:
+      nickname:
         type: string
-      username:
+      updatedAt:
         type: string
     type: object
   schema.UserUpdateSchema:
     properties:
-      email:
-        type: string
-      username:
+      nickname:
         type: string
     type: object
 info:
@@ -515,21 +513,18 @@ paths:
       - Resume
   /users:
     post:
-      consumes:
-      - application/json
       description: create new user
       parameters:
-      - description: initial values of user
-        in: body
-        name: user
+      - description: verify code
+        in: query
+        name: code
         required: true
-        schema:
-          $ref: '#/definitions/schema.UserCreateSchema'
+        type: string
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "204":
+          description: No Content
           schema:
             properties:
               user:
@@ -663,6 +658,37 @@ paths:
       security:
       - BearerAuth: []
       summary: update user data by id
+      tags:
+      - User
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Starts the sign-up process by creating a temporary user profile
+        in the cache and dispatching a verification code to the provided email address.
+      parameters:
+      - description: initial values of User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/schema.UserCreateSchema'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: Initiate user registration & send verification email
       tags:
       - User
 securityDefinitions:

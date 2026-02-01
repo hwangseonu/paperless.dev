@@ -2,17 +2,17 @@ package auth
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hwangseonu/paperless.dev/internal/common"
 	"github.com/hwangseonu/paperless.dev/internal/database"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginCredentials struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -38,34 +38,33 @@ func LoginHandler(c *gin.Context) {
 	var credentials LoginCredentials
 
 	if err := c.ShouldBindJSON(&credentials); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": common.ErrInvalidInput})
 		return
 	}
 
-	user, err := database.NewUserRepository().FindByUsername(credentials.Username)
+	user, err := database.NewUserRepository().FindByEmail(credentials.Email)
 
 	if err != nil {
-		status := http.StatusInternalServerError
-		if errors.Is(err, common.ErrUserNotFound) {
-			status = http.StatusNotFound
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": common.ErrUserNotFound})
+		} else {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": common.ErrInternal})
 		}
-		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password))
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": common.ErrUnauthorized})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": common.ErrUnauthorized})
 		return
 	}
 
-	access, err1 := GenerateToken(user.ID.Hex(), "access")
-	refresh, err2 := GenerateToken(user.ID.Hex(), "refresh")
+	access, err1 := GenerateToken(user.Email, "access")
+	refresh, err2 := GenerateToken(user.Email, "refresh")
 
 	if err1 != nil || err2 != nil {
 		err = errors.Join(err1, err2)
-		log.Println("an error occurred while generate tokens", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": common.ErrInvalidToken})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": common.ErrInternal})
 		return
 	}
 
@@ -89,7 +88,7 @@ func LoginHandler(c *gin.Context) {
 func RefreshHandler(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": common.ErrUnauthorized})
 		return
 	}
 
@@ -100,12 +99,12 @@ func RefreshHandler(c *gin.Context) {
 
 	claims, err := ParseToken(tokenString)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": ErrTokenInvalid})
 		return
 	}
 
 	if claims.Subject != "refresh" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": ErrTokenInvalid})
 		return
 	}
 
@@ -113,8 +112,7 @@ func RefreshHandler(c *gin.Context) {
 	refresh, err2 := GenerateToken(claims.UserID, "refresh")
 
 	if err1 != nil || err2 != nil {
-		log.Println("an error occurred while generating tokens during refresh:", errors.Join(err1, err2))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": common.ErrInvalidToken})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": common.ErrInvalidToken})
 		return
 	}
 
