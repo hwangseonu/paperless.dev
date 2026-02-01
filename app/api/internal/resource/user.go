@@ -99,17 +99,15 @@ func (resource *User) Create(_ interface{}, c *gin.Context) (gin.H, int, error) 
 func (resource *User) Read(id string, c *gin.Context) (gin.H, int, error) {
 	if id == "me" {
 		credentials := auth.MustGetUserCredentials(c)
-		userID := credentials.UserID
+		email := credentials.UserID
 
-		objectID, err := bson.ObjectIDFromHex(userID)
-		if err != nil {
-			return nil, http.StatusBadRequest, common.ErrInvalidInput
-		}
-
-		user, err := resource.repository.FindByID(objectID)
+		user, err := resource.repository.FindByEmail(email)
 
 		if err != nil {
-			return nil, http.StatusNotFound, common.ErrUserNotFound
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				return nil, http.StatusNotFound, common.ErrUserNotFound
+			}
+			return nil, http.StatusInternalServerError, common.ErrInternal
 		}
 
 		return gin.H{"user": user.ResponseSchema()}, http.StatusOK, nil

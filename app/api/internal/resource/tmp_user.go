@@ -1,13 +1,10 @@
 package resource
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"html/template"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hwangseonu/paperless.dev/internal/common"
@@ -85,21 +82,15 @@ func sendVerifyCode(email string) (string, error) {
 	}
 
 	verifyCode := hex.EncodeToString(b)
-	tmplPath := filepath.Join("templates", "verify_email.html")
-	tmpl, err := template.ParseFiles(tmplPath)
+	body, err := mail.VerifyCodeTemplate(verifyCode)
 	if err != nil {
-		return "", err
-	}
-
-	var buf bytes.Buffer
-	if err = tmpl.Execute(&buf, map[string]string{"Code": verifyCode}); err != nil {
 		return "", err
 	}
 
 	content := mail.Content{
 		To:      []string{email},
 		Subject: "[PAPERLESS.DEV] 인증코드",
-		Body:    buf.String(),
+		Body:    body,
 	}
 
 	if err := mailClient.SendMail(content); err != nil {

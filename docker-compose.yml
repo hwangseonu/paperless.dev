@@ -9,7 +9,10 @@ services:
       - MONGO_URI=mongodb://${DB_USER}:${DB_PASSWORD}@db:27017/?authSource=admin
       - REDIS_ADDR=redis:6379
       - JWT_SECRET=${JWT_SECRET}
-      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     depends_on:
       - redis
       - db
@@ -44,7 +47,7 @@ services:
     image: redis:8.4.0-alpine
     container_name: redis
     ports:
-      - 6379:6379
+      - "6379:6379"
     networks:
       - paperless-network
 

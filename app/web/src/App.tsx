@@ -6,6 +6,7 @@ import { MOCK_RESUME_DATA as resume } from '@/assets/mock.ts'
 import HomePage from '@/pages/HomePage.tsx'
 import Layout from '@/components/common/Layout.tsx'
 import LoginPage from '@/pages/LoginPage.tsx'
+import RegisterPage from '@/pages/RegisterPage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: 'login',
         element: <LoginPage />,
+      },
+      {
+        path: 'register',
+        element: <RegisterPage />,
       },
     ],
   },
