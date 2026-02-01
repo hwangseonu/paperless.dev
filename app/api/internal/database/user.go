@@ -11,7 +11,7 @@ import (
 )
 
 type User struct {
-	ID        bson.ObjectID `bson:"_id"`
+	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Nickname  string        `bson:"nickname"`
 	Email     string        `bson:"email"`
 	Password  string        `bson:"password"`
@@ -49,6 +49,7 @@ type MongoUserRepository struct {
 
 func (r *MongoUserRepository) Create(user *schema.UserCreateSchema) (*User, error) {
 	doc := &User{
+		ID:        bson.NewObjectID(),
 		Nickname:  user.Nickname,
 		Password:  user.Password,
 		Email:     user.Email,
@@ -89,7 +90,7 @@ func (r *MongoUserRepository) FindByEmail(email string) (*User, error) {
 func (r *MongoUserRepository) Update(id bson.ObjectID, schema *schema.UserUpdateSchema) (*User, error) {
 	fields := bson.M{}
 	if schema.Nickname != nil {
-		fields["Nickname"] = *schema.Nickname
+		fields["nickname"] = *schema.Nickname
 	}
 	fields["updatedAt"] = time.Now()
 
