@@ -10,36 +10,36 @@ type props = {
 
 function Projects({ projects }: props) {
   return (
-    <ResumeSection icon={Code} title="Projects">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <ResumeSection icon={Code} title={'Projects'}>
+      <div className={'grid grid-cols-1 md:grid-cols-2 gap-4'}>
         {projects.map((project) => (
           <Card
             key={project.id}
-            className="group p-4 hover:border-indigo-300 transition-all hover:shadow-md "
+            className={'group p-4 hover:border-indigo-300 transition-all hover:shadow-md '}
           >
-            <CardHeader className="flex justify-between items-start p-0 mt-2">
-              <CardTitle className="text-slate-900 group-hover:text-indigo-600 transition-colors">
+            <CardHeader className={'flex justify-between items-start p-0 mt-2'}>
+              <CardTitle className={'text-slate-900 group-hover:text-indigo-600 transition-colors'}>
                 {project.title}
               </CardTitle>
               {project.url && (
                 <a
                   href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-slate-400 hover:text-indigo-600"
+                  target={'_blank'}
+                  rel={'noopener noreferrer'}
+                  className={'text-slate-400 hover:text-indigo-600'}
                 >
                   <ExternalLink size={16} />
                 </a>
               )}
             </CardHeader>
-            <CardDescription className="text-xs text-slate-500">
+            <CardDescription className={'text-xs text-slate-500'}>
               {project.description}
             </CardDescription>
-            <CardFooter className="flex flex-wrap gap-1.5 p-0">
+            <CardFooter className={'flex flex-wrap gap-1.5 p-0'}>
               {project.skills.map((s, i) => (
                 <Badge
                   key={i}
-                  className="bg-slate-100 text-slate-500 rounded text-[10px] font-bold"
+                  className={'bg-slate-100 text-slate-500 rounded text-[10px] font-bold'}
                 >
                   {s}
                 </Badge>

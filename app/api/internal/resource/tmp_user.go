@@ -28,7 +28,7 @@ var mailClient = mail.NewClient(common.GetConfig().SMTP)
 // @Failure 400 {object}	schema.Error
 // @Failure 409 {object}	schema.Error
 // @Failure 500 {object}	schema.Error
-// @Router	/users/register [post]
+// @Router	/auth/register [post]
 func CreateTempUserHandler(userRepo database.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		body := new(schema.UserCreateSchema)

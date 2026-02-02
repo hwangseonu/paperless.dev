@@ -11,9 +11,9 @@ function ResumePage() {
   const data: Resume = useLoaderData()
 
   return (
-    <main className="w-full mx-auto py-12 px-6 lg:px-8">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <aside className="lg:col-span-4 space-y-8 animate-fade-in-up">
+    <main className={'w-full mx-auto py-12 px-6 lg:px-8'}>
+      <div className={'grid grid-cols-1 lg:grid-cols-12 gap-12'}>
+        <aside className={'lg:col-span-4 space-y-8 animate-fade-in-up'}>
           <Information
             title={data.title}
             description={data.description}
@@ -24,7 +24,7 @@ function ResumePage() {
           <Skills skills={data.skills} />
         </aside>
 
-        <Card className="lg:col-span-8 p-8 lg:p-12">
+        <Card className={'lg:col-span-8 p-8 lg:p-12'}>
           <Career experiences={data.experiences} />
           <Projects projects={data.projects} />
           <Educations educations={data.educations} />

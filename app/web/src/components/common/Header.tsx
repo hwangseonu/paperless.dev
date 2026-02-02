@@ -9,7 +9,7 @@ function Header() {
         'sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center'
       }
     >
-      <Link to="/">
+      <Link to={'/'}>
         <div className={'flex items-center gap-2 cursor-pointer group'}>
           <img
             src={logo}
@@ -20,7 +20,7 @@ function Header() {
         </div>
       </Link>
 
-      <Link to="/login">
+      <Link to={'/login'}>
         <div>
           <Button>로그인</Button>
         </div>

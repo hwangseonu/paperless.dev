@@ -9,19 +9,18 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Link, useNavigate } from 'react-router-dom'
-import { Label } from '@/components/ui/label.tsx'
-import { Input } from '@/components/ui/input.tsx'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import * as React from 'react'
 import useAxios from '@/hooks/useAxios.ts'
 import { ENDPOINTS } from '@/components/config/api.ts'
+import { LoaderIcon } from 'lucide-react'
+import { cn } from '@/lib/utils.ts'
+import { Label } from '@/components/ui/label.tsx'
+import { Input } from '@/components/ui/input.tsx'
 
-export function LoginPage() {
+export function RegisterPage() {
   const navigate = useNavigate()
-  const loginAPI = useAxios<{ access_token: string; refresh_token: string }>(
-    ENDPOINTS.AUTH.LOGIN,
-    'post',
-  )
+  const registerAPI = useAxios(ENDPOINTS.AUTH.REGISTER, 'post')
 
   const onSubmit = useCallback(
     async (event: React.SubmitEvent) => {
@@ -31,21 +30,14 @@ export function LoginPage() {
       const data = Object.fromEntries(formData.entries())
 
       try {
-        await loginAPI.execute(data)
-      } catch (e) {
-        console.error(e)
+        await registerAPI.execute(data)
+        navigate('/verify')
+      } catch (error) {
+        console.error(error)
       }
     },
-    [loginAPI],
+    [navigate, registerAPI],
   )
-
-  useEffect(() => {
-    const tokens = loginAPI.data
-    if (tokens) {
-      //TODO save tokens in local storage
-      navigate('/')
-    }
-  }, [loginAPI.data, navigate])
 
   return (
     <div className={'w-full my-24 min-h-96 flex justify-center items-center gap-4'}>
@@ -53,13 +45,19 @@ export function LoginPage() {
         <Card className={'w-full'}>
           <CardHeader className={'flex flex-col justify-center'}>
             <CardTitle className={'text-3xl'}>PAPERLESS.DEV</CardTitle>
-            <CardDescription>서비스 이용을 위해 로그인을 진행해주세요.</CardDescription>
+            <CardDescription>
+              회원가입을 완료하고 종이없이 최고의 이력서를 만들어보세요.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className={'flex flex-col gap-6'}>
               <div className={'grid gap-2'}>
+                <Label htmlFor={'email'}>닉네임</Label>
+                <Input name={'nickname'} required />
+              </div>
+              <div className={'grid gap-2'}>
                 <Label htmlFor={'email'}>이메일 주소</Label>
-                <Input name={'email'} type={'email'} placeholder={'m@example.com'} required />
+                <Input name={'email'} type={'email'} placeholder={'me@example.com'} required />
               </div>
               <div className={'grid gap-2'}>
                 <div className={'flex items-center justify-between'}>
@@ -69,24 +67,20 @@ export function LoginPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className={'flex flex-col gap-2'}>
-            <div className={'w-full flex flex-col'}>
-              <CardAction className={'w-full flex flex-row justify-between items-center'}>
-                <span className={'text-xs text-slate-500'}>비밀번호를 잊으셨습니까?</span>
-                <Button variant={'link'} className={'text-xs'} type={'button'}>
-                  비밀번호 변경
-                </Button>
-              </CardAction>
-              <CardAction className={'w-full flex flex-row justify-between items-center'}>
-                <span className={'text-xs text-slate-500'}>아직 PAPERLESS 회원이 아니신가요?</span>
-                <Button variant={'link'} className={'text-xs'} type={'button'}>
-                  <Link to={'/register'}>회원가입</Link>
-                </Button>
-              </CardAction>
-            </div>
+          <CardFooter className={'flex-col gap-2'}>
             <CardAction className={'w-full flex flex-row justify-between items-center'}>
-              <Button type={'submit'} className={'w-full'}>
-                로그인
+              <span className={'text-xs text-slate-500'}>이미 PAPERLESS 회원이신가요?</span>
+              <Button variant={'link'} className={'text-xs'}>
+                <Link to={'/login'}>로그인</Link>
+              </Button>
+            </CardAction>
+            <CardAction className={'w-full flex flex-row justify-between items-center'}>
+              <Button type={'submit'} className={'w-full'} disabled={registerAPI.loading}>
+                {registerAPI.loading ? (
+                  <LoaderIcon role={'status'} className={cn('size-4 animate-spin')} />
+                ) : (
+                  '회원가입'
+                )}
               </Button>
             </CardAction>
           </CardFooter>
@@ -96,4 +90,4 @@ export function LoginPage() {
   )
 }
 
-export default LoginPage
+export default RegisterPage

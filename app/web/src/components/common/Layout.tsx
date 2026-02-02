@@ -4,7 +4,7 @@ import Footer from '@/components/common/Footer.tsx'
 
 function Layout() {
   return (
-    <div className="layout-wrapper">
+    <div className={'layout-wrapper'}>
       <Header />
 
       <main>

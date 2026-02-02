@@ -7,6 +7,7 @@ import HomePage from '@/pages/HomePage.tsx'
 import Layout from '@/components/common/Layout.tsx'
 import LoginPage from '@/pages/LoginPage.tsx'
 import RegisterPage from '@/pages/RegisterPage.tsx'
+import VerifyCodePage from '@/pages/VerifyCodePage.tsx'
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         path: 'register',
         element: <RegisterPage />,
+      },
+      {
+        path: 'verify',
+        element: <VerifyCodePage />,
       },
     ],
   },
