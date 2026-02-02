@@ -49,13 +49,9 @@ func main() {
 		api.RegisterHandlers(&engine.RouterGroup)
 	}
 
-	apiGroup := engine.Group("/api/v1")
-	{
-		apiGroup.POST("/users/register", resource.CreateTempUserHandler(userRepo))
-	}
-
 	authGroup := engine.Group("/api/v1/auth")
 	{
+		authGroup.POST("/register", resource.CreateTempUserHandler(userRepo))
 		authGroup.POST("/login", auth.LoginHandler)
 		authGroup.POST("/refresh", auth.RefreshHandler)
 	}

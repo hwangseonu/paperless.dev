@@ -321,6 +321,37 @@ paths:
       summary: refresh tokens
       tags:
       - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Starts the sign-up process by creating a temporary user profile
+        in the cache and dispatching a verification code to the provided email address.
+      parameters:
+      - description: initial values of User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/schema.UserCreateSchema'
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/schema.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schema.Error'
+      summary: Initiate user registration & send verification email
+      tags:
+      - User
   /resumes:
     get:
       description: get all resumes
@@ -658,37 +689,6 @@ paths:
       security:
       - BearerAuth: []
       summary: update user data by id
-      tags:
-      - User
-  /users/register:
-    post:
-      consumes:
-      - application/json
-      description: Starts the sign-up process by creating a temporary user profile
-        in the cache and dispatching a verification code to the provided email address.
-      parameters:
-      - description: initial values of User
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/schema.UserCreateSchema'
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/schema.Error'
-        "409":
-          description: Conflict
-          schema:
-            $ref: '#/definitions/schema.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/schema.Error'
-      summary: Initiate user registration & send verification email
       tags:
       - User
 securityDefinitions:
