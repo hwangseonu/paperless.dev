@@ -11,10 +11,11 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { Label } from '@/components/ui/label.tsx'
 import { Input } from '@/components/ui/input.tsx'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import * as React from 'react'
 import useAxios from '@/hooks/useAxios.ts'
 import { ENDPOINTS } from '@/components/config/api.ts'
+import { useAuth } from '@/hooks/useAuth.ts'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -22,6 +23,7 @@ export function LoginPage() {
     ENDPOINTS.AUTH.LOGIN,
     'post',
   )
+  const { login } = useAuth()
 
   const onSubmit = useCallback(
     async (event: React.SubmitEvent) => {
@@ -31,21 +33,17 @@ export function LoginPage() {
       const data = Object.fromEntries(formData.entries())
 
       try {
-        await loginAPI.execute(data)
+        const tokens = await loginAPI.execute(data)
+        if (tokens) {
+          await login(tokens)
+          navigate('/')
+        }
       } catch (e) {
         console.error(e)
       }
     },
-    [loginAPI],
+    [login, loginAPI, navigate],
   )
-
-  useEffect(() => {
-    const tokens = loginAPI.data
-    if (tokens) {
-      //TODO save tokens in local storage
-      navigate('/')
-    }
-  }, [loginAPI.data, navigate])
 
   return (
     <div className={'w-full my-24 min-h-96 flex justify-center items-center gap-4'}>
@@ -59,7 +57,7 @@ export function LoginPage() {
             <div className={'flex flex-col gap-6'}>
               <div className={'grid gap-2'}>
                 <Label htmlFor={'email'}>이메일 주소</Label>
-                <Input name={'email'} type={'email'} placeholder={'m@example.com'} required />
+                <Input name={'email'} type={'email'} placeholder={'me@example.com'} required />
               </div>
               <div className={'grid gap-2'}>
                 <div className={'flex items-center justify-between'}>

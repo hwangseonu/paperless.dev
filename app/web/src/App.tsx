@@ -8,6 +8,7 @@ import Layout from '@/components/common/Layout.tsx'
 import LoginPage from '@/pages/LoginPage.tsx'
 import RegisterPage from '@/pages/RegisterPage.tsx'
 import VerifyCodePage from '@/pages/VerifyCodePage.tsx'
+import { AuthProvider } from '@/context/AuthContext.tsx'
 
 const router = createBrowserRouter([
   {
@@ -37,7 +38,11 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router}></RouterProvider>
+  return (
+    <AuthProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </AuthProvider>
+  )
 }
 
 export default App

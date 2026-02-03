@@ -1,51 +1,39 @@
 import { useState, useCallback } from 'react'
-import axios, { AxiosError, type AxiosRequestConfig, type Method } from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 
-// API 응답 데이터의 타입을 제네릭 T로 받습니다.
-interface UseLazyAxiosReturn<T> {
-  execute: (body?: unknown, config?: AxiosRequestConfig) => Promise<T>
-  data: T | null
-  loading: boolean
-  error: AxiosError | null
-}
+const api = axios.create({})
 
-const useAxios = <T = unknown>(
-  url: string,
-  method: Method = 'get',
-  baseConfig?: AxiosRequestConfig,
-): UseLazyAxiosReturn<T> => {
+export function useAxios<T>(url: string, method: string = 'get') {
   const [data, setData] = useState<T | null>(null)
-  const [error, setError] = useState<AxiosError | null>(null)
+  const [error, setError] = useState<unknown | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
 
   const execute = useCallback(
-    async (body?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    async (body?: unknown, customConfig?: AxiosRequestConfig): Promise<T | null> => {
       setLoading(true)
       setError(null)
 
       try {
-        const response = await axios({
+        const response = await api.request<T>({
           url,
           method,
           data: body,
-          ...baseConfig,
-          ...config,
+          ...customConfig,
         })
 
         setData(response.data)
         return response.data
       } catch (err) {
-        const axiosError = err as AxiosError
-        setError(axiosError)
-        throw axiosError
+        setError(err)
+        throw err
       } finally {
         setLoading(false)
       }
     },
-    [url, method, baseConfig],
+    [url, method],
   )
 
-  return { execute, data, loading, error }
+  return { data, error, loading, execute }
 }
 
 export default useAxios

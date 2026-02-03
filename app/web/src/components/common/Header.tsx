@@ -1,12 +1,16 @@
 import logo from '../../assets/logo.svg'
 import { Button } from '@/components/ui/button.tsx'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth.ts'
+import Avatar from '@/components/common/Avatar'
 
 function Header() {
+  const { user } = useAuth()
+
   return (
     <header
       className={
-        'sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center'
+        'sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 pl-6 pr-12 py-4 flex justify-between items-center'
       }
     >
       <Link to={'/'}>
@@ -20,11 +24,15 @@ function Header() {
         </div>
       </Link>
 
-      <Link to={'/login'}>
-        <div>
-          <Button>로그인</Button>
-        </div>
-      </Link>
+      {user ? (
+        <Avatar user={user} />
+      ) : (
+        <Link to={'/login'}>
+          <div>
+            <Button>로그인</Button>
+          </div>
+        </Link>
+      )}
     </header>
   )
 }

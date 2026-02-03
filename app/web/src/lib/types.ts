@@ -45,3 +45,9 @@ export interface Project {
   skills: string[]
   url?: string
 }
+
+export interface UserInfo {
+  id: string
+  email: string
+  nickname: string
+}
