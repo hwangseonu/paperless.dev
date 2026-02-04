@@ -11,12 +11,13 @@ import (
 )
 
 type User struct {
-	ID        bson.ObjectID `bson:"_id,omitempty"`
-	Nickname  string        `bson:"nickname"`
-	Email     string        `bson:"email"`
-	Password  string        `bson:"password"`
-	CreatedAt time.Time     `bson:"createdAt"`
-	UpdatedAt time.Time     `bson:"updatedAt"`
+	ID           bson.ObjectID `bson:"_id,omitempty"`
+	Nickname     string        `bson:"nickname"`
+	Email        string        `bson:"email"`
+	ProfileImage string        `bson:"profileImage"`
+	Password     string        `bson:"password"`
+	CreatedAt    time.Time     `bson:"createdAt"`
+	UpdatedAt    time.Time     `bson:"updatedAt"`
 }
 
 func (user *User) ResponseSchema() *schema.UserResponseSchema {
@@ -91,6 +92,9 @@ func (r *MongoUserRepository) Update(id bson.ObjectID, schema *schema.UserUpdate
 	fields := bson.M{}
 	if schema.Nickname != nil {
 		fields["nickname"] = *schema.Nickname
+	}
+	if schema.ProfileImage != nil {
+		fields["profileImage"] = *schema.ProfileImage
 	}
 	fields["updatedAt"] = time.Now()
 

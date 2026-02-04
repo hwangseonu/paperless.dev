@@ -11,7 +11,8 @@ type UserCreateSchema struct {
 }
 
 type UserUpdateSchema struct {
-	Nickname *string `json:"nickname,omitempty"`
+	Nickname     *string `json:"nickname,omitempty"`
+	ProfileImage *string `json:"profile_image,omitempty"`
 }
 
 type UserResponseSchema struct {
